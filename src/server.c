@@ -30,14 +30,12 @@ int main (int argc, char **argv) {
 	struct ThreadArgs *threadArgs;
 	int listenfd, connfd;
 
-	initConnection();
-	printConnection();
-
-	initWorkerList();
-	printWorkerList();
+	// init all data structure
+	initStructure();
 
 	listenfd = createTCPServerSocket(SERV_PORT);
 
+	// spawn a thread for sending job purpose
 	pthread_create(&threadID, NULL, ThreadSend, NULL);
 
 	while(1) {
@@ -73,7 +71,7 @@ void *ThreadRecv(void *threadArgs) {
 	while((n = recv(clientSock, (struct Message*)&req, sizeof req, 0)) > 0) {
 		switch(req.command) {
 			case HASH:
-				printf("Message info: %d %d %s\n",req.clientID,   req.requestID, req.other);
+				printf("Message info: %d %d %s\n",req.clientID, req.requestID, req.other);
 				
 				if(req.clientID == 0) {
 					clientID = getNewClientID();
@@ -81,11 +79,22 @@ void *ThreadRecv(void *threadArgs) {
 
 					conn = createConnection(clientID, clientSock);
 					notice = addConnection(conn);
-					printConnection();
-
-					res = response(ACCEPT, clientID, 0, "");
-					send(clientSock, (struct Message *)&res, sizeof res, 0);
+					if(notice.flag == SUCCESS)
+						printConnection();
 				}
+
+				unsigned int requestID = getNewRequestID();
+				addRequest(requestID);
+				
+				struct Request request = createRequest(requestID, req.other);
+				struct Requester requester = createRequester(clientID, request);
+
+				notice = addRequester(requester);
+				if(notice.flag == SUCCESS)
+					printRequesterList();
+
+				res = response(ACCEPT, clientID, requestID, "");
+				send(clientSock, (struct Message *)&res, sizeof res, 0);
 				
 				break;
 
