@@ -29,7 +29,7 @@ struct Request createRequest(unsigned int requestID, char *hash) {
 // ============================================================================
 
 // REQUESTER ==================================================================
-struct Requester createRequester(unsigned int clientID, struct Request request) {
+struct Requester createRequester(unsigned int clientID) {
 	struct Requester r;
 
 	r.clientID = clientID;
@@ -41,9 +41,6 @@ struct Requester createRequester(unsigned int clientID, struct Request request) 
 		r.request[i].requestID = 0;
 		strcpy(r.request[i].hash, "");
 	}
-
-	r.request[0].requestID = request.requestID;
-	strcpy(r.request[0].hash, request.hash);
 
 	return r;
 }

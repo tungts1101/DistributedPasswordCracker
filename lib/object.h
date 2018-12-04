@@ -31,7 +31,7 @@ struct Worker {
 struct Job {
 	struct Worker worker;
 	struct Request request;
-	unsigned int packet;
+	unsigned int package;
 	enum STATUS status;
 };
 
@@ -44,7 +44,7 @@ struct Job {
 // ============================================================================
 
 // REQUESTER ==================================================================
-	struct Requester createRequester(unsigned int clientID, struct Request request);
+	struct Requester createRequester(unsigned int clientID);
 // ============================================================================
 
 // WORKER =====================================================================
