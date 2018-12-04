@@ -35,9 +35,12 @@ struct Job {
 	enum STATUS status;
 };
 
-/*
- *
- * */
-struct Connection createConnection(unsigned int clientID, int sockfd);
+// CONNECTION =================================================================
+	struct Connection createConnection(unsigned int clientID, int sockfd);
+// ============================================================================
+
+// WORKER =====================================================================
+	struct Worker createWorker(unsigned clientID);
+// ============================================================================
 
 #endif

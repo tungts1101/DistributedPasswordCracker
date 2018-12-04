@@ -4,6 +4,7 @@
 
 #include "../lib/object.h"
 
+// CONNECTION =================================================================
 struct Connection createConnection(unsigned int clientID, int sockfd) {
 	struct Connection conn;
 
@@ -12,3 +13,18 @@ struct Connection createConnection(unsigned int clientID, int sockfd) {
 
 	return conn;
 }
+
+// ============================================================================
+
+// REQUEST ====================================================================
+// ============================================================================
+
+// WORKER =====================================================================
+struct Worker createWorker(unsigned int clientID) {
+	struct Worker w;
+
+	w.clientID = clientID;
+
+	return w;
+}
+// ============================================================================
