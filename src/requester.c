@@ -66,10 +66,11 @@ int main(int argc, char **argv)
 	if(fcntl(sockfd, __F_SETOWN, getpid()) < 0)
         error(ERR_OWN_SOCKET);
 
-    struct Message req = response(HASH, clientID, 0, "aac4aqibO4kDg");
+    struct Message req;
 
     char s[5];
     while(fgets(s, 5, stdin) != NULL) {
+		req = response(HASH, clientID, 0, "aac4aqibO4kDg");
         send(sockfd, (struct Message*)&req, sizeof req, 0);
     }
 
