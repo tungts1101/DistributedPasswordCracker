@@ -23,27 +23,26 @@ struct Notice {
 	char *reason;
 };
 
-/*
- *
- * */
-void initConnection();
-unsigned int getNewClientID();
-struct Notice addConnection (struct Connection conn);
-struct Notice removeConnection (unsigned int clientID);
-struct Notice deleteConnection();
-void printConnection();
+// CONNECTION =================================================================
+	void initConnection();
+	unsigned int getNewClientID();
+	struct Notice addConnection (struct Connection conn);
+	struct Notice removeConnection (unsigned int clientID);
+	struct Notice deleteConnection();
+	void printConnection();
+	int getSocketDesc (unsigned int clientID);
+// ============================================================================
 
-/*
- *
- * */
+// REQUESTER ==================================================================
+// ============================================================================
 
+// WORKER =====================================================================
+	void initWorkerList();
+	struct Notice addWorkerList (struct Worker w);
+	void printWorkerList();
+// ============================================================================
 
-/*
- *
- * */
-
-/*
- *
- * */
+// JOB ========================================================================
+// ============================================================================
 
 #endif
