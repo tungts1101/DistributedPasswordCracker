@@ -12,6 +12,8 @@ enum FLAG{SUCCESS, FAIL};
 
 struct Connection *connectionList;
 
+unsigned int requestList[(MAX_PENDING - 1) * MAX_REQUEST];
+
 struct Requester *requesterList;
 
 struct Worker *workerList;
@@ -23,6 +25,8 @@ struct Notice {
 	char *reason;
 };
 
+void initStructure();
+
 // CONNECTION =================================================================
 	void initConnection();
 	unsigned int getNewClientID();
@@ -33,7 +37,16 @@ struct Notice {
 	int getSocketDesc (unsigned int clientID);
 // ============================================================================
 
+// REQUEST ====================================================================
+	void initRequestList();
+	unsigned int getNewRequestID();
+	struct Notice addRequest(unsigned int requestID);
+// ============================================================================
+
 // REQUESTER ==================================================================
+	void initRequesterList();
+	struct Notice addRequester(struct Requester requester);
+	void printRequesterList();
 // ============================================================================
 
 // WORKER =====================================================================
