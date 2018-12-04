@@ -41,12 +41,12 @@ int main (int argc, char **argv) {
 	while(1) {
 		connfd = acceptTCPConnection(listenfd);
 
-		printf("%s%d\n","Received request from ", connfd);
+		// printf("%s%d\n","Received request from ", connfd);
 		threadArgs = (struct ThreadArgs *)malloc(sizeof(struct ThreadArgs));
 		threadArgs -> clntSock = connfd;
 		
 		pthread_create(&threadID, NULL, ThreadRecv, (void *) threadArgs);
-		printf("with thread %ld\n", (long int) threadID);
+		// printf("with thread %ld\n", (long int) threadID);
 	}
 
 	return 0;
@@ -70,36 +70,42 @@ void *ThreadRecv(void *threadArgs) {
 
 	while((n = recv(clientSock, (struct Message*)&req, sizeof req, 0)) > 0) {
 		switch(req.command) {
-			case HASH:
-				printf("Message info: %d %d %s\n",req.clientID, req.requestID, req.other);
+			case HASH: ;
+				// printf("Message info: %d %d %s\n",req.clientID, req.requestID, req.other);
 				
+				unsigned int requestID = getNewRequestID();
+				addRequest(requestID);
+				struct Request request = createRequest(requestID, req.other);
+
 				if(req.clientID == 0) {
 					clientID = getNewClientID();
 					printf("new client = %u\n", clientID);
 
 					conn = createConnection(clientID, clientSock);
 					notice = addConnection(conn);
-					if(notice.flag == SUCCESS)
+					if(notice.flag == SUCCESS) {
 						printConnection();
-				}
 
-				unsigned int requestID = getNewRequestID();
-				addRequest(requestID);
-				
-				struct Request request = createRequest(requestID, req.other);
-				struct Requester requester = createRequester(clientID, request);
-
-				notice = addRequester(requester);
-				if(notice.flag == SUCCESS)
+						struct Requester requester = createRequester(clientID);
+						notice = addRequester(requester);
+						
+						if(notice.flag == SUCCESS) {
+							addRequestToRequester(requester.clientID, request);
+							printRequesterList();
+						}	
+					}
+				} else {
+					addRequestToRequester(req.clientID, request);
 					printRequesterList();
-
+				}
+				
 				res = response(ACCEPT, clientID, requestID, "");
 				send(clientSock, (struct Message *)&res, sizeof res, 0);
 				
 				break;
 
 			case JOIN:
-				printf("Message info: %d %d\n",req.clientID, req.requestID);
+				// printf("Message info: %d %d\n",req.clientID, req.requestID);
 
 				if(req.clientID == 0) {
 					clientID = getNewClientID();
