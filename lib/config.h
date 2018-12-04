@@ -16,4 +16,6 @@
 
 #define MAX_JOB 15
 
+#define MAX_REQUEST 30
+
 #endif
