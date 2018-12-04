@@ -170,12 +170,27 @@ struct Notice addRequester(struct Requester requester) {
 	return success();
 }
 
+struct Notice addRequestToRequester(unsigned int clientID, struct Request request) {
+	int i = 0;
+
+	while(requesterList[i++].clientID != clientID);
+
+	i--;
+	int j = 0;
+	while(requesterList[i].request[j++].requestID != 0);
+	
+	requesterList[i].request[--j] = request;
+
+	return success();
+}
+
 void printRequesterList() {
 	printf("===== Requester List: =====\n");
 
 	for(int i = 0; i < MAX_PENDING - 1; i++) {
 		if(requesterList[i].clientID != 0) {
 			printf("Requester %d:\n", requesterList[i].clientID);
+
 			for(int j = 0; j < MAX_REQUEST; j++)
 				if(requesterList[i].request[j].requestID != 0)
 					printf("request ID = %d, hash = %s\n", requesterList[i].request[j].requestID,requesterList[i].request[j].hash);
