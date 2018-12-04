@@ -39,8 +39,16 @@ struct Job {
 	struct Connection createConnection(unsigned int clientID, int sockfd);
 // ============================================================================
 
+// REQUEST ====================================================================
+	struct Request createRequest(unsigned int requestID, char *hash);
+// ============================================================================
+
+// REQUESTER ==================================================================
+	struct Requester createRequester(unsigned int clientID, struct Request request);
+// ============================================================================
+
 // WORKER =====================================================================
-	struct Worker createWorker(unsigned clientID);
+	struct Worker createWorker(unsigned int clientID);
 // ============================================================================
 
 #endif
