@@ -109,7 +109,10 @@ void printConnection() {
 int getSocketDesc (unsigned int clientID) {
 	int i = 0;
 
-	while(connectionList[i++].clientID != clientID);
+	while(connectionList[i++].clientID != clientID) {
+		if (i >= MAX_PENDING)
+			return 0;
+	}
 
 	return connectionList[--i].sockfd;
 }
@@ -182,6 +185,20 @@ struct Notice addRequestToRequester(unsigned int clientID, struct Request reques
 	requesterList[i].request[--j] = request;
 
 	return success();
+}
+
+unsigned int getRequesterFromRequest(unsigned int requestID) {
+	int i = 0;
+	int j;
+
+	while(i < MAX_PENDING) {
+		j = 0;
+		while(j < MAX_REQUEST)
+			if (requesterList[i].request[j++].requestID == requestID)
+				return requesterList[i].clientID;
+		
+		i++;
+	}
 }
 
 void printRequesterList() {

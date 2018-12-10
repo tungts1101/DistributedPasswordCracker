@@ -47,6 +47,7 @@ void initStructure();
 	void initRequesterList();
 	struct Notice addRequester(struct Requester requester);
 	struct Notice addRequestToRequester(unsigned int clientID, struct Request request);
+	unsigned int getRequesterFromRequest(unsigned int requestID);
 	void printRequesterList();
 // ============================================================================
 
