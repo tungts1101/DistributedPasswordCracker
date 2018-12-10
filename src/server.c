@@ -157,22 +157,37 @@ void *ThreadRecv(void *threadArgs) {
 
 void*ThreadSend(void *threadArgs) {
 	pthread_detach(pthread_self());
+	int clientSock;
 
 	unsigned int count = 1;
 	struct Message res;
 	char *other = malloc(MSG_OTHER_LENGTH);
+	int request_count = 0;
+	while (1) {
+		while (requestList[0] != 0) {   // Có request mới bắt đầu chạy
+			// other = getJob("aasNLphgV1W3o", count);	
+			
+			for(int i = 0; i < MAX_PENDING - 1; i++) {
+				// printf("");
+				if(requesterList[i].clientID != 0) {
+					for(int j = 0; j < MAX_REQUEST; j++)
+						if(requesterList[i].request[j].requestID == requestList[request_count]) {
+							other = getJob(requesterList[i].request[j].hash, count);
+							break;
+						}
+				}
+			}		
 
-	// while(1) {
-	//       other = getJob("aasNLphgV1W3o", count);
-	//       printf("other = %s\n", other);
+			printf("other = %s\n", other);
 
-	//       res = response(JOB, 2, 1, other);
-	//       send(5, (struct Message*)&res, sizeof res, 0);
+			res = response(JOB, 2, 1, other);
+			send(clientSock, (struct Message*)&res, sizeof res, 0);
 
-	//       count++;
-	//       memset(&other, 0, sizeof other);
+			count++;
+			memset(&other, 0, sizeof other);
 
-	//       if(count > 3) count = 1;
-	//       sleep(5);
-	// }
+			if(count > 3) count = 1;
+			sleep(5);
+		}
+	}
 }
