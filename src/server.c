@@ -67,6 +67,8 @@ void *ThreadRecv(void *threadArgs) {
 	struct Connection conn;
 	struct Notice notice;
 	struct Worker worker;
+	int requesterID;
+	int sockfd;
 
 	while((n = recv(clientSock, (struct Message*)&req, sizeof req, 0)) > 0) {
 		switch(req.command) {
@@ -131,8 +133,11 @@ void *ThreadRecv(void *threadArgs) {
 			case DONE_NOT_FOUND:
 				printf("Client %d cannot found job = %d\n", req.clientID, req.requestID);
 
-				res = response(DONE_NOT_FOUND, 1, 1, "aasNLphgV1W3o");
-				send(4, (struct Message *)&res, sizeof res, 0);
+				requesterID = getRequesterFromRequest(req.requestID);
+				sockfd = getSocketDesc(requesterID);
+
+				res = response(DONE_NOT_FOUND, requesterID, req.requestID, "aasNLphgV1W3o");
+				send(sockfd, (struct Message *)&res, sizeof res, 0);
 
 				break;
 			
@@ -144,9 +149,11 @@ void *ThreadRecv(void *threadArgs) {
 				strcat(other, " ");
 				strcat(other, req.other);
 				
-				res = response(DONE_FOUND, 1, 1, other);
-				send(4, (struct Message *)&res, sizeof res, 0); // example of sending done_found_job to first connected request client
-				// in here it means requestCliID = 1, and clientSocket = 4
+				requesterID = getRequesterFromRequest(req.requestID);
+				sockfd = getSocketDesc(requesterID);
+
+				res = response(DONE_FOUND, requesterID, req.requestID, other);
+				send(sockfd, (struct Message *)&res, sizeof res, 0);
 				break;
 
 			default:
@@ -161,18 +168,26 @@ void*ThreadSend(void *threadArgs) {
 	unsigned int count = 1;
 	struct Message res;
 	char *other = malloc(MSG_OTHER_LENGTH);
+	unsigned int workerID;
+	int sockfd;
 
-	// while(1) {
-	//       other = getJob("aasNLphgV1W3o", count);
-	//       printf("other = %s\n", other);
+	while(1) {
+		other = getJob("aasNLphgV1W3o", count);
+		printf("other = %s\n", other);
 
-	//       res = response(JOB, 2, 1, other);
-	//       send(5, (struct Message*)&res, sizeof res, 0);
+		workerID = workerList[0].clientID;
+		sockfd = getSocketDesc(workerID);
 
-	//       count++;
-	//       memset(&other, 0, sizeof other);
+		if(sockfd != 0) {
+			res = response(JOB, workerID, 1, other);
+		  
+	      	send(sockfd, (struct Message*)&res, sizeof res, 0);
+		}
 
-	//       if(count > 3) count = 1;
-	//       sleep(5);
-	// }
+		count++;
+		memset(&other, 0, sizeof other);
+
+		if(count > 3) count = 1;
+		sleep(5);
+	}
 }
