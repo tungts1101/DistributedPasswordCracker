@@ -15,6 +15,7 @@
 #include "../lib/error.h"
 #include "../lib/config.h"
 #include "../lib/crypt.h"
+#define MAX_LEN_BUF 30
 
 int sockfd;
 unsigned int clientID;
@@ -67,10 +68,33 @@ int main(int argc, char **argv)
 
     struct Message req;
 
-    char s[5];
-    while(fgets(s, 5, stdin) != NULL) {
-		req = response(JOIN, clientID, 0, "");
-        send(sockfd, (struct Message*)&req, sizeof req, 0);
+    char* s = (char *)malloc(MAX_LEN_BUF * sizeof(char));
+    char* temp_string = (char *)malloc(MAX_LEN_BUF * sizeof(char));
+    char* splitString;
+    int i = 0;
+    char outputStringArray[MAX_LEN_BUF][MAX_LEN_BUF];
+
+    while(fgets(s, MAX_LEN_BUF, stdin) != NULL) {
+		i = 0;
+        strcpy(temp_string,s);
+        splitString = strtok(temp_string, "  \n");
+        while (splitString != NULL) {
+            strcpy(outputStringArray[i++], splitString);
+            splitString = strtok(NULL, " ");
+        }
+
+		// Check loại connect
+        if (strcmp(outputStringArray[0],"JOIN") == 0) {
+            req = response(JOIN, clientID, 0, "");
+            send(sockfd, (struct Message*)&req, sizeof req, 0);
+        // } else if (strcmp(outputStringArray[0],"PING") == 0) {
+    	// 	printf("PING not support\n");
+        } else {
+            printf("Wrong connection type\n");
+        }
+        
+        memset(temp_string,0,strlen(temp_string));
+
     }
 
     exit(0);

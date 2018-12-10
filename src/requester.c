@@ -16,6 +16,7 @@
 #include "../lib/error.h"
 #include "../lib/config.h"
 #include "../lib/other.h"
+#define MAX_LEN_BUF 30
 
 int sockfd;
 unsigned int clientID;
@@ -68,10 +69,35 @@ int main(int argc, char **argv)
 
     struct Message req;
 
-    char s[5];
-    while(fgets(s, 5, stdin) != NULL) {
-		req = response(HASH, clientID, 0, "aac4aqibO4kDg");
-        send(sockfd, (struct Message*)&req, sizeof req, 0);
+    char* s = (char *)malloc(MAX_LEN_BUF * sizeof(char));
+    char* temp_string = (char *)malloc(MAX_LEN_BUF * sizeof(char));
+    char* splitString;
+    int i = 0;
+    char outputStringArray[MAX_LEN_BUF][MAX_LEN_BUF];
+
+
+    while(fgets(s, MAX_LEN_BUF, stdin) != NULL) {
+        i = 0;
+        strcpy(temp_string,s);
+        splitString = strtok(temp_string, "  \n");
+        while (splitString != NULL) {
+            strcpy(outputStringArray[i++], splitString);
+            splitString = strtok(NULL, " ");
+        }
+        
+        // Check loại connect
+        if (strcmp(outputStringArray[0],"HASH") == 0) {
+            outputStringArray[1][strlen(outputStringArray[1])-1] = '\0';
+            req = response(HASH, clientID, 0, outputStringArray[1]);
+            send(sockfd, (struct Message*)&req, sizeof req, 0);
+        } else {
+            printf("Wrong connection type\n");
+        }
+        
+        memset(temp_string,0,strlen(temp_string));
+
+		// req = response(HASH, clientID, 0, "aac4aqibO4kDg");
+        // send(sockfd, (struct Message*)&req, sizeof req, 0);
     }
 
     exit(0);
