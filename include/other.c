@@ -37,7 +37,7 @@ char *getTo(char *other) {
 	char *to = malloc(PW_LENGTH);
 
 	for(int i = 0; i < PW_LENGTH; i++)
-		to[i] = other[i + HASH_LENGTH + PW_LENGTH];
+		to[i] = other[i + HASH_LENGTH + PW_LENGTH + 1];
 	
 	return to;
 }
