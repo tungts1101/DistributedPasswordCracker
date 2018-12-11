@@ -11,20 +11,6 @@
 #include "../lib/config.h"
 #include "../lib/other.h"
 
-char *getNext(const char *from) {
-	char *result = (char*)malloc(PW_LENGTH);
-	strcpy(result, from);
-
-	int i = PW_LENGTH;
-
-	while(result[--i] == 'z');
-	result[i]++;
-	while(result[++i] == 'z')
-		result[i] = 'a';
-
-	return result;
-}
-
 char *solvePassword(char *other) {
 	char *hash = getHash(other);
 	char *from = getFrom(other);
@@ -50,4 +36,18 @@ char *solve(char *from, char *to, char *hash) {
 	}
 	
 	return NULL;
+}
+
+char *getNext(const char *from) {
+	char *result = (char*)malloc(PW_LENGTH);
+	strcpy(result, from);
+
+	int i = PW_LENGTH;
+
+	while(result[--i] == 'z');
+	result[i]++;
+	while(result[++i] == 'z')
+		result[i] = 'a';
+
+	return result;
 }

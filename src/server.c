@@ -24,6 +24,7 @@ struct ThreadArgs {
 };
 
 int listenfd;
+int requestNo = 0;
 
 int main (int argc, char **argv) {
 	pthread_t threadID;
@@ -75,9 +76,12 @@ void *ThreadRecv(void *threadArgs) {
 			case HASH: ;
 				// printf("Message info: %d %d %s\n",req.clientID, req.requestID, req.other);
 				
-				unsigned int requestID = getNewRequestID();
-				addRequest(requestID);
+				// unsigned int requestID = getNewRequestID();
+				// addRequest(requestID);
+
+				unsigned int requestID = ++requestNo;
 				struct Request request = createRequest(requestID, req.other);
+				splitJob(request);
 
 				if(req.clientID == 0) {
 					clientID = getNewClientID();
@@ -162,6 +166,22 @@ void *ThreadRecv(void *threadArgs) {
 	}
 }
 
+char *getMsgFromJob(struct Job job) {
+	char *hash = malloc(HASH_LENGTH);
+	hash = getHashFromRequest(job.requestID);
+
+	char tmp[3];
+	sprintf(tmp, "%d", job.package);
+
+	char *other = malloc(MSG_OTHER_LENGTH);
+
+	strcat(other, hash);
+	strcat(other, " ");
+	strcat(other, tmp);
+
+	return other;
+}
+
 void*ThreadSend(void *threadArgs) {
 	pthread_detach(pthread_self());
 
@@ -170,24 +190,31 @@ void*ThreadSend(void *threadArgs) {
 	char *other = malloc(MSG_OTHER_LENGTH);
 	unsigned int workerID;
 	int sockfd;
+	char *package;
+	struct Job job;
 
 	while(1) {
-		other = getJob("aasNLphgV1W3o", count);
-		printf("other = %s\n", other);
+		job = jobQueue[0];
+		if(job.requestID != 0) {
+			other = getMsgFromJob(job);
 
-		workerID = workerList[0].clientID;
-		sockfd = getSocketDesc(workerID);
+			printf("other = %s\n", other);
 
-		if(sockfd != 0) {
-			res = response(JOB, workerID, 1, other);
-		  
-	      	send(sockfd, (struct Message*)&res, sizeof res, 0);
+			workerID = workerList[0].clientID;
+			sockfd = getSocketDesc(workerID);
+
+			if(sockfd != 0) {
+				res = response(JOB, workerID, 1, other);
+			
+				send(sockfd, (struct Message*)&res, sizeof res, 0);
+			}
+
+			count++;
+			memset(&other, 0, sizeof other);
+
+			if(count > 3) count = 1;
+			
 		}
-
-		count++;
-		memset(&other, 0, sizeof other);
-
-		if(count > 3) count = 1;
 		sleep(5);
 	}
 }

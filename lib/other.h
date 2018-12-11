@@ -7,8 +7,8 @@
 
 char *getHash(char *other);
 char *getPassword(char *other);
+unsigned int getPackage(char *other);
 char *getFrom(char *other);
 char *getTo(char *other);
-char *getJob(char *hash, unsigned int order);
 
 #endif
