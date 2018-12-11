@@ -30,9 +30,10 @@ struct Notice failure(char *reason) {
 
 void initStructure() {
 	initConnection();
-	initRequestList();
+	// initRequestList();
 	initRequesterList();
 	initWorkerList();
+	initJobQueue();
 }
 
 // CONNECTION =================================================================
@@ -119,28 +120,28 @@ int getSocketDesc (unsigned int clientID) {
 // ============================================================================
 
 // REQUEST ====================================================================
-void initRequestList() {
-	for(int i = 0; i < (MAX_PENDING - 1) * MAX_REQUEST; i++)
-		requestList[i] = 0;
-}
+// void initRequestList() {
+// 	for(int i = 0; i < (MAX_PENDING - 1) * MAX_REQUEST; i++)
+// 		requestList[i] = 0;
+// }
 
-unsigned int getNewRequestID() {
-	int i = 0;
+// unsigned int getNewRequestID() {
+// 	int i = 0;
 
-	while(requestList[i++] != 0);
+// 	while(requestList[i++] != 0);
 
-	return i;
-}
+// 	return i;
+// }
 
-struct Notice addRequest(unsigned int requestID) {
-	int i = 0;
+// struct Notice addRequest(unsigned int requestID) {
+// 	int i = 0;
 
-	while(requestList[i++] != 0);
+// 	while(requestList[i++] != 0);
 
-	requestList[--i] = requestID;
+// 	requestList[--i] = requestID;
 
-	return success();
-}
+// 	return success();
+// }
 // ============================================================================
 
 // REQUESTER ==================================================================
@@ -201,6 +202,20 @@ unsigned int getRequesterFromRequest(unsigned int requestID) {
 	}
 }
 
+char *getHashFromRequest(unsigned int requestID) {
+	int i = 0;
+	int j;
+
+	while(i < MAX_PENDING) {
+		j = 0;
+		while(j < MAX_REQUEST)
+			if (requesterList[i].request[j++].requestID == requestID)
+				return requesterList[i].request[--j].hash;
+		
+		i++;
+	}
+}
+
 void printRequesterList() {
 	printf("===== Requester List: =====\n");
 
@@ -252,4 +267,65 @@ void printWorkerList() {
 // ============================================================================
 
 // JOB ========================================================================
+const unsigned int maxJob = (MAX_PENDING - 1) * MAX_JOB * 25;
+
+void initJobQueue() {
+	jobQueue = (struct Job *) malloc(maxJob * sizeof(struct Job));
+}
+
+struct Notice splitJob(struct Request request) {
+	int i = 0;
+	struct Job job = createJob(request.requestID);
+	
+	for(int j = 1; j < 'z' - 'a' + 1; j++) {
+		job.package = j;
+		while(jobQueue[i++].requestID != 0);
+		jobQueue[--i] = job;
+	}
+
+	return success();
+}
+
+struct Notice recoverJob(unsigned int clientID) {
+	for(int i = 0; i < maxJob; i++)
+		if(jobQueue[i].worker.clientID = clientID)
+			jobQueue[i].worker.clientID = 0;
+	
+	return success();
+}
+
+struct Notice deleteJob(unsigned int requestID, unsigned int package) {
+	for(int i = 0; i < maxJob; i++)
+		if(jobQueue[i].requestID == requestID && jobQueue[i].package == package) {
+			jobQueue[i].worker.clientID = 0;
+			jobQueue[i].requestID = 0;
+			jobQueue[i].package = 0;
+		}
+			
+	return success();
+}
+
+struct Notice removeJob(unsigned int requestID) {
+	for(int i = 0; i < maxJob; i++) {
+		if(jobQueue[i].requestID == requestID) {
+			jobQueue[i].worker.clientID = 0;
+			jobQueue[i].requestID = 0;
+			jobQueue[i].package = 0;	
+		}
+	}
+
+	return success();
+}
+
+void printJobQueue() {
+	printf("===== Job Queue =====\n");
+
+	for(int i = 0; i < maxJob; i++) {
+		if(jobQueue[i].requestID != 0) {
+			printf("WorkerID = %d, RequestID = %d, Packet = %d\n", jobQueue[i].worker.clientID,jobQueue[i].requestID, jobQueue[i].package);
+		}
+	}	
+
+	printf("=====================\n");
+}
 // ============================================================================

@@ -12,7 +12,7 @@ enum FLAG{SUCCESS, FAIL};
 
 struct Connection *connectionList;
 
-unsigned int requestList[(MAX_PENDING - 1) * MAX_REQUEST];
+// unsigned int requestList[(MAX_PENDING - 1) * MAX_REQUEST];
 
 struct Requester *requesterList;
 
@@ -38,9 +38,9 @@ void initStructure();
 // ============================================================================
 
 // REQUEST ====================================================================
-	void initRequestList();
-	unsigned int getNewRequestID();
-	struct Notice addRequest(unsigned int requestID);
+	// void initRequestList();
+	// unsigned int getNewRequestID();
+	// struct Notice addRequest(unsigned int requestID);
 // ============================================================================
 
 // REQUESTER ==================================================================
@@ -48,6 +48,7 @@ void initStructure();
 	struct Notice addRequester(struct Requester requester);
 	struct Notice addRequestToRequester(unsigned int clientID, struct Request request);
 	unsigned int getRequesterFromRequest(unsigned int requestID);
+	char *getHashFromRequest(unsigned int requestID);
 	void printRequesterList();
 // ============================================================================
 
@@ -58,6 +59,35 @@ void initStructure();
 // ============================================================================
 
 // JOB ========================================================================
+	void initJobQueue();
+
+	/* 
+	 * receive HASH command from requester
+	 * split a request to 25 packages (from 'a' -> 'z')
+	 * and add to jobQueue
+	 * */
+	struct Notice splitJob(struct Request request);
+
+	/*
+	 * when connection lost (check by PING)
+	 * set all job.worker with that clientID to 0
+	 * */
+	struct Notice recoverJob(unsigned int clientID);
+
+	/*
+	 * receive DONE_NOT_FOUND command from worker
+	 * (DONE_NOT_FOUND, workerID, requestID, package)
+	 * */
+	struct Notice deleteJob(unsigned int requestID, unsigned int package);
+
+	/*
+	 * receive DONE_FOUND command from worker
+	 * (DONE_FOUND, workerID, requestID, package)
+	 * remove all job with that requetsID from jobQueue
+	 * */
+	struct Notice removeJob(unsigned int requestID);
+
+	void printJobQueue();
 // ============================================================================
 
 #endif
