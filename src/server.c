@@ -167,8 +167,7 @@ void *ThreadRecv(void *threadArgs) {
 }
 
 char *getMsgFromJob(struct Job job) {
-	char *hash = malloc(HASH_LENGTH);
-	hash = getHashFromRequest(job.requestID);
+	char *hash = getHashFromRequest(job.requestID);
 
 	char tmp[3];
 	sprintf(tmp, "%d", job.package);
@@ -184,68 +183,39 @@ char *getMsgFromJob(struct Job job) {
 
 void*ThreadSend(void *threadArgs) {
 	pthread_detach(pthread_self());
-	int clientSock;
 
-	unsigned int count = 1;
 	struct Message res;
 	char *other = malloc(MSG_OTHER_LENGTH);
-<<<<<<< HEAD
-	int request_count = 0;
-	while (1) {
-		while (requestList[0] != 0) {   // Có request mới bắt đầu chạy
-			// other = getJob("aasNLphgV1W3o", count);	
-			
-			for(int i = 0; i < MAX_PENDING - 1; i++) {
-				// printf("");
-				if(requesterList[i].clientID != 0) {
-					for(int j = 0; j < MAX_REQUEST; j++)
-						if(requesterList[i].request[j].requestID == requestList[request_count]) {
-							other = getJob(requesterList[i].request[j].hash, count);
-							break;
-						}
-				}
-			}		
-
-			printf("other = %s\n", other);
-
-			res = response(JOB, 2, 1, other);
-			send(clientSock, (struct Message*)&res, sizeof res, 0);
-=======
 	unsigned int workerID;
 	int sockfd;
-	char *package;
-	struct Job job;
+	int jobPos;
+	int workerPos;
 
 	while(1) {
-		job = jobQueue[0];
-		if(job.requestID != 0) {
-			other = getMsgFromJob(job);
+		jobPos = getFirstJob();
+		if(jobPos != -1) {	// check if we have a job
+			workerPos = getFirstWorker();
+			if(workerPos != -1) {	// check if we have a worker
+				printf("worker %d, job %d\n", workerPos, jobPos);
+				memset(&other, 0, sizeof other);
+				other = getMsgFromJob(jobQueue[jobPos]);
 
-			printf("other = %s\n", other);
+				printf("other = %s\n", other);
 
-			workerID = workerList[0].clientID;
-			sockfd = getSocketDesc(workerID);
+				sockfd = getSocketDesc(workerList[workerPos].clientID);
 
-			if(sockfd != 0) {
-				res = response(JOB, workerID, 1, other);
-			
-				send(sockfd, (struct Message*)&res, sizeof res, 0);
+				if(sockfd != 0) {
+					res = response(JOB, workerList[workerPos].clientID, jobQueue[jobPos].requestID, other);
+				
+					send(sockfd, (struct Message*)&res, sizeof res, 0);
+				}
+
+				jobQueue[jobPos].worker.clientID = workerList[workerPos].clientID;	// assign job
+				workerList[workerPos].jobNumber++;	// increase job number	
+				printWorkerList();
+				// printJobQueue();
 			}
->>>>>>> 1d664bc1d74ffa2f81e028abe6d6091ac8b87f25
-
-			count++;
-			memset(&other, 0, sizeof other);
-
-			if(count > 3) count = 1;
-<<<<<<< HEAD
-			sleep(5);
 		}
+		sleep(5);	// after interval
 	}
 }
-=======
-			
-		}
-		sleep(5);
-	}
-}
->>>>>>> 1d664bc1d74ffa2f81e028abe6d6091ac8b87f25

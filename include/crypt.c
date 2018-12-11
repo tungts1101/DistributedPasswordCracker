@@ -11,10 +11,29 @@
 #include "../lib/config.h"
 #include "../lib/other.h"
 
+char *getFrom(char *other) {
+	unsigned int package = getPackage(other);
+
+	char *from = malloc(PW_LENGTH);
+
+	memset(from, 'a', PW_LENGTH);
+	from[0] = package + 96;
+
+	return from;
+}
+
+char *getTo(char *from) {
+	char *to = malloc(PW_LENGTH);
+	strcpy(to, from);
+	to[0]++;
+
+	return to;
+}
+
 char *solvePassword(char *other) {
 	char *hash = getHash(other);
 	char *from = getFrom(other);
-	char *to = getTo(other);
+	char *to = getTo(from);
 	printf("from = %s, to = %s\n", from ,to);
 
 	char  *password = solve(from, to, hash);
