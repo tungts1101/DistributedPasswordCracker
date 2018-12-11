@@ -280,12 +280,16 @@ const unsigned int maxJob = (MAX_PENDING - 1) * MAX_REQUEST * 25;
 
 void initJobQueue() {
 	jobQueue = (struct Job *) malloc(maxJob * sizeof(struct Job));
+
+	for(int i = 0; i < maxJob; i++) {
+		jobQueue[i].worker = createWorker(0);
+		jobQueue[i].requestID = 0;
+		jobQueue[i].package = 0;
+	}
 }
 
 int getFirstJob() {
-	int i = 0;
-
-	for(; i < maxJob; i++)
+	for(int i = 0; i < maxJob; i++)
 		if(jobQueue[i].requestID != 0 && jobQueue[i].worker.clientID == 0)
 			return i;
 	
