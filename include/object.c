@@ -51,6 +51,7 @@ struct Worker createWorker(unsigned int clientID) {
 	struct Worker w;
 
 	w.clientID = clientID;
+	w.jobNumber = 0;
 
 	return w;
 }
