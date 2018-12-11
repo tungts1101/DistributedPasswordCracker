@@ -147,15 +147,15 @@ int getSocketDesc (unsigned int clientID) {
 // REQUESTER ==================================================================
 void initRequesterList() {
 	// leave one slot for worker
-	requesterList = (struct Requester *) malloc((MAX_PENDING - 1) * sizeof(struct Requester));
+	requesterList = (struct Requester *) malloc(sizeof(struct Requester) * (MAX_PENDING - 1));
 
-	for(int i = 0; i < MAX_PENDING; i++) {
+	for(int i = 0; i < MAX_PENDING - 1; i++) {
 		requesterList[i].clientID = 0;
 
 		// init request list
-		requesterList[i].request = (struct Request*) malloc(MAX_REQUEST * sizeof(struct Request));
+		requesterList[i].request = (struct Request*) malloc((MAX_REQUEST - 1) * sizeof(struct Request));
 
-		for (int j = 0; j < MAX_REQUEST; j++) {
+		for (int j = 0; j < MAX_REQUEST - 1; j++) {
 			requesterList[i].request[j].requestID = 0;
 			strcpy(requesterList[i].request[j].hash, "");
 		}
@@ -238,8 +238,9 @@ void initWorkerList() {
 	// leave one slot for requester
 	workerList = (struct Worker *) malloc((MAX_PENDING - 1) * sizeof(struct Worker));
 
-	for(int i = 0; i < MAX_PENDING; i++) {
+	for(int i = 0; i < MAX_PENDING - 1; i++) {
 		workerList[i].clientID = 0;
+		workerList[i].jobNumber = 0;
 	}
 }
 
@@ -255,22 +256,41 @@ struct Notice addWorkerList (struct Worker w) {
 	return success();
 }
 
+int getFirstWorker() {
+	for(int i = 0; i < MAX_PENDING - 1; i++)
+		if (workerList[i].clientID != 0 && workerList[i].jobNumber < MAX_JOB)
+			return i;
+
+	return -1;
+}
+
 void printWorkerList() {
 	printf("===== Worker ID: =====\n");
 
 	for(int i = 0; i < MAX_PENDING - 1; i++)
 		if(workerList[i].clientID != 0)
-			printf("%d ", workerList[i].clientID);
+			printf("%d has %d jobs", workerList[i].clientID, workerList[i].jobNumber);
 	
 	printf("\n====================\n");
 }
 // ============================================================================
 
 // JOB ========================================================================
-const unsigned int maxJob = (MAX_PENDING - 1) * MAX_JOB * 25;
+const unsigned int maxJob = (MAX_PENDING - 1) * MAX_REQUEST * 25;
 
 void initJobQueue() {
 	jobQueue = (struct Job *) malloc(maxJob * sizeof(struct Job));
+}
+
+int getFirstJob() {
+	int i = 0;
+
+	for(; i < maxJob; i++)
+		if(jobQueue[i].requestID != 0 && jobQueue[i].worker.clientID == 0)
+			return i;
+	
+	// if job queue is now full of worker
+	return -1;
 }
 
 struct Notice splitJob(struct Request request) {

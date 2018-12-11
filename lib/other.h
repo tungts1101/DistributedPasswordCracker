@@ -8,7 +8,5 @@
 char *getHash(char *other);
 char *getPassword(char *other);
 unsigned int getPackage(char *other);
-char *getFrom(char *other);
-char *getTo(char *other);
 
 #endif

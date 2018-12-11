@@ -24,6 +24,7 @@ struct Requester {
 
 struct Worker {
 	unsigned int clientID;
+	unsigned int jobNumber;
 };
 
 struct Job {

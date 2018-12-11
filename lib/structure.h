@@ -55,11 +55,22 @@ void initStructure();
 // WORKER =====================================================================
 	void initWorkerList();
 	struct Notice addWorkerList (struct Worker w);
+
+	/*
+	 * use it when distributing job for worker
+	 * */
+	int getFirstWorker();
+	
 	void printWorkerList();
 // ============================================================================
 
 // JOB ========================================================================
 	void initJobQueue();
+
+	/*
+	 * use it when distributing job for worker
+	 * */
+	int getFirstJob();
 
 	/* 
 	 * receive HASH command from requester
