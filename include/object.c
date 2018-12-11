@@ -55,3 +55,15 @@ struct Worker createWorker(unsigned int clientID) {
 	return w;
 }
 // ============================================================================
+
+// JOB ========================================================================
+struct Job createJob(unsigned int requestID) {
+	struct Job j;
+
+	j.worker.clientID = 0;
+	j.requestID = requestID;
+	j.package = 0;
+
+	return j;
+}
+// ============================================================================

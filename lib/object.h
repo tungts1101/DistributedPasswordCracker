@@ -22,17 +22,14 @@ struct Requester {
 	struct Request *request;
 };
 
-enum STATUS{DONE, PENDING, NOT_FOUND};
-
 struct Worker {
 	unsigned int clientID;
 };
 
 struct Job {
 	struct Worker worker;
-	struct Request request;
+	unsigned int requestID;
 	unsigned int package;
-	enum STATUS status;
 };
 
 // CONNECTION =================================================================
@@ -49,6 +46,10 @@ struct Job {
 
 // WORKER =====================================================================
 	struct Worker createWorker(unsigned int clientID);
+// ============================================================================
+
+// JOB ========================================================================
+	struct Job createJob(unsigned int requestID);
 // ============================================================================
 
 #endif
