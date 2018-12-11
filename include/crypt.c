@@ -32,8 +32,8 @@ char *getTo(char *from) {
 
 char *solvePassword(char *other) {
 	char *hash = getHash(other);
-	char *from = getFrom(from);
-	char *to = getTo(other);
+	char *from = getFrom(other);
+	char *to = getTo(from);
 	printf("from = %s, to = %s\n", from ,to);
 
 	char  *password = solve(from, to, hash);
