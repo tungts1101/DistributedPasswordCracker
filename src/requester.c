@@ -14,8 +14,7 @@
 #include "../lib/message.h"
 #include "../lib/connection.h"
 #include "../lib/error.h"
-#include "../lib/config.h"
-#include "../lib/other.h"
+
 #define MAX_LEN_BUF 30
 
 int sockfd;

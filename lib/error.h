@@ -17,11 +17,7 @@ typedef enum {
    ERR_OWN_SOCKET
 } ErrorCode;
 
-/*
- * error(): kill process and notify about what error happened
- * @param err: an ErrorCode defined above
- * @return
- * */
+// kill process and notify about what error happened
 void error(ErrorCode err);
 
 #endif

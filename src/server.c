@@ -13,7 +13,6 @@
 #include "../lib/connection.h"
 #include "../lib/config.h"
 #include "../lib/error.h"
-#include "../lib/other.h"
 #include "../lib/structure.h"
 
 void *ThreadRecv(void *threadArgs);

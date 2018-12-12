@@ -15,7 +15,13 @@ struct Message {
     char other[MSG_OTHER_LENGTH];
 };
 
+// construct Message
 struct Message request(enum COMMAND command, char *other);
 struct Message response(enum COMMAND command, unsigned int clientID, unsigned requestID, char *other);
+
+// handle Message.other
+char *getHash(char *other);
+char *getPassword(char *other);
+unsigned int getPackage(char *other);
 
 #endif
