@@ -31,7 +31,7 @@ int main (int argc, char **argv) {
 	int listenfd, connfd;
 
 	// init all data structure
-	initStructure();
+	init();
 
 	listenfd = createTCPServerSocket(SERV_PORT);
 
@@ -64,9 +64,7 @@ void *ThreadRecv(void *threadArgs) {
 	struct Message res;
 	char *other = (char *)malloc(MSG_OTHER_LENGTH);
 	int clientID;
-	struct Connection conn;
-	struct Notice notice;
-	struct Worker worker;
+	Connection conn;
 	int requesterID;
 	int sockfd;
 
@@ -79,26 +77,22 @@ void *ThreadRecv(void *threadArgs) {
 				// addRequest(requestID);
 
 				unsigned int requestID = ++requestNo;
-				struct Request request = createRequest(requestID, req.other);
+				Request request = {requestID, *req.other};
 				splitJob(request);
 
 				if(req.clientID == 0) {
 					clientID = getNewClientID();
 					printf("new client = %u\n", clientID);
 
-					conn = createConnection(clientID, clientSock);
-					notice = addConnection(conn);
-					if(notice.flag == SUCCESS) {
-						printConnection();
+					setConnection(&conn, clientID, clientSock);
+					addConnection(conn);
+					printConnection();
 
-						struct Requester requester = createRequester(clientID);
-						notice = addRequester(requester);
-						
-						if(notice.flag == SUCCESS) {
-							addRequestToRequester(requester.clientID, request);
-							printRequesterList();
-						}	
-					}
+					Requester requester = {clientID, {0, ""}};
+					addRequester(requester);
+					
+					addRequestToRequester(requester.clientID, request);
+					printRequesterList();	
 				} else {
 					addRequestToRequester(req.clientID, request);
 					printRequesterList();
@@ -116,16 +110,13 @@ void *ThreadRecv(void *threadArgs) {
 					clientID = getNewClientID();
 					printf("new client = %u\n", clientID);
 					
-					conn = createConnection(clientID, clientSock);
+					setConnection(&conn, clientID, clientSock);
 					addConnection(conn);
 					printConnection();
 
-					if(notice.flag == SUCCESS) {
-						worker = createWorker(clientID);
-						notice = addWorkerList(worker);
-						if(notice.flag == SUCCESS)
-							printWorkerList();
-					}
+					Worker worker = {clientID, 0};
+					addWorkerList(worker);
+					printWorkerList();
 
 					res = response(ACCEPT, clientID, 0, "");
 					send(clientSock, (struct Message *)&res, sizeof res, 0);
@@ -165,7 +156,7 @@ void *ThreadRecv(void *threadArgs) {
 	}
 }
 
-char *getMsgFromJob(struct Job job) {
+char *getMsgFromJob(Job job) {
 	char *hash = getHashFromRequest(job.requestID);
 
 	char tmp[3];
@@ -197,22 +188,22 @@ void*ThreadSend(void *threadArgs) {
 			if(workerPos != -1) {	// check if we have a worker
 				printf("worker %d, job %d\n", workerPos, jobPos);
 				memset(&other, 0, sizeof other);
-				other = getMsgFromJob(jobQueue[jobPos]);
+				other = getMsgFromJob(jobList[jobPos]);
 
 				printf("other = %s\n", other);
 
 				sockfd = getSocketDesc(workerList[workerPos].clientID);
 
 				if(sockfd != 0) {
-					res = response(JOB, workerList[workerPos].clientID, jobQueue[jobPos].requestID, other);
+					res = response(JOB, workerList[workerPos].clientID, jobList[jobPos].requestID, other);
 				
 					send(sockfd, (struct Message*)&res, sizeof res, 0);
 				}
 
-				jobQueue[jobPos].worker.clientID = workerList[workerPos].clientID;	// assign job
+				jobList[jobPos].workerID = workerList[workerPos].clientID;	// assign job
 				workerList[workerPos].jobNumber++;	// increase job number	
 				printWorkerList();
-				// printJobQueue();
+				// printjobList();
 			}
 		}
 		sleep(5);	// after interval

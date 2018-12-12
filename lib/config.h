@@ -14,8 +14,10 @@
 #define MAX_PENDING 10
 #define SERV_PORT 3000
 
-#define MAX_JOB 15
+#define MAX_JOB_PER_WORKER 15
 
 #define MAX_REQUEST 30
+
+#define MAX_JOB ((MAX_PENDING - 1) * MAX_REQUEST * 25)
 
 #endif
