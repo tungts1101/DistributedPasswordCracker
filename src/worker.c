@@ -136,8 +136,9 @@ void*ThreadWork(void* threadArgs) {
 
             if(password == NULL)
                 req = response(DONE_NOT_FOUND, clientID, job.requestID, job.other);
-            else
-                req = response(DONE_FOUND, clientID, job.requestID, password);
+            else {
+				req = response(DONE_FOUND, clientID, job.requestID, password);
+			}
 
             send(sockfd, (struct Message *)&req, sizeof req, 0);
         }

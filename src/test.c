@@ -11,58 +11,14 @@
 #include "../lib/object.h"
 #include "../lib/helper.h"
 
-void testJobListAPI();
-
-// helper.h ===================================================================
 void testSolvePassword();
-// ============================================================================
-
 void testObject();
-
-// structure ==================================================================
 void testStructure();
-void testConnectionList();
-// ============================================================================
 
 void main() {
 	// testSolvePassword();
 	// testObject();
 	testStructure();
-}
-
-void testJobListAPI() {
-	init();
-	Request request;
-	int command;
-	unsigned int workerID;
-	unsigned int requestID;
-	unsigned int package;
-
-	do {
-		printf("get command : workerID : requestID : packet\n");
-		scanf("%d %d %d %d", &command, &workerID, &requestID, &package);
-
-		switch (command) {
-			case 1: ;
-				printf("Get new requestID = %d\n", requestID);
-				setRequest(&request, requestID, " ");
-				splitJob(request);
-				printJobList();
-				break;
-			case 2: ;
-				printf("Remove all job with requestID = %d\n", requestID);
-				removeJob(requestID);
-				printJobList();
-				break;
-			case 3: ;
-				printf("Get DONE_NOT_FOUND with requestID = %d, package = %d\n", requestID, package);
-				deleteJob(requestID, package);
-				printJobList();
-				break;
-			default:
-				break;
-		}
-	} while(command != 0);
 }
 
 void testSolvePassword() {
@@ -81,41 +37,105 @@ void testSolvePassword() {
 	strcpy(other, "aajZvqJxbbrPI 10");
 	assert(NULL == solvePassword(other));
 }
-
 // object.h ===================================================================
-void testConnectionObj() {
-}
+	void testConnectionObj() {
+	}
 
-void testRequestObj() {
-}
+	void testRequestObj() {
+	}
 
-void testRequesterObj() {
-}
+	void testRequesterObj() {
+	}
 
-void testWorkerObj() {
-}
+	void testWorkerObj() {
+	}
 
-void testObject() {
-	testConnectionObj();
-	testRequestObj();
-	testRequesterObj();
-	testWorkerObj();
-}
+	void testObject() {
+		testConnectionObj();
+		testRequestObj();
+		testRequesterObj();
+		testWorkerObj();
+	}
 // ============================================================================
 
-void testStructure() {
-	init();
-	testConnectionList();
-}
+// structure.h ================================================================
+	void testConnectionList() {
+		init();
+		assert(1 == getNewClientID());
 
-void testConnectionList() {
-	assert(1 == getNewClientID());
+		Connection conn = {1, 4};
+		addConnection(conn);
+		assert(4 == getSocketDesc(1));
+		assert(2 == getNewClientID());
 
-	Connection conn = {1, 4};
-	addConnection(conn);
-	assert(4 == getSocketDesc(1));
-	assert(2 == getNewClientID());
+		removeConnection(1);
+		assert(1 == getNewClientID());
+	}
+	void testRequesterList() {
+		init();
+		Requester requester = {1, {1, "aajZvqJxbbrPI"}};
+		addRequester(requester);
 
-	removeConnection(1);
-	assert(1 == getNewClientID());
-}
+		Request request = {2, "aap9o6UZXOlDc"};
+		addRequestToRequester(1, request);
+
+		assert(1 == getRequesterFromRequest(2));
+		assert(0 == strcmp("aap9o6UZXOlDc", getHashFromRequest(2)));
+
+		removeRequester(1);
+		assert(0 == requesterList[0].clientID);
+		assert(0 == requesterList[0].request[0].requestID);
+	}
+	void testWorkerList() {
+		init();
+		Worker w_1 = {1, MAX_JOB};
+		Worker w_2 = {2, 5};
+		
+		addWorker(w_1);
+		addWorker(w_2);
+
+		assert(1 == getFirstEnableWorker());
+		removeWorker(1);
+		Worker w_3 = {1, 7};
+		addWorker(w_3);
+		assert(1 == workerList[0].clientID);
+	}
+	void testJobList() {
+		init();
+
+		// requester sending 2 HASH
+		Requester requester = {1, {0, ""}};
+		addRequester(requester);
+
+		Request req_1 = {1, "aajZvqJxbbrPI"};
+		addRequestToRequester(1, req_1);
+		splitJob(req_1);
+		assert(0 == getFirstJob());
+
+		Request req_2 = {2, "aap9o6UZXOlDc"};
+		addRequestToRequester(1, req_2);
+		splitJob(req_2);
+		assert(0 == getFirstJob());
+
+		// worker JOIN
+		Worker w = {2, 0};
+		addWorker(w);
+		assert(0 == getFirstEnableWorker());
+		assignJob(&workerList[getFirstEnableWorker()], &jobList[getFirstJob()]);
+		assert(1 == getFirstJob());
+
+		// worker solve password
+		removeJob(1);
+
+		Request req_3 = {3, "aajZvqJxbbrPI"};
+		addRequestToRequester(1, req_3);
+		splitJob(req_3);
+		assert(3 == jobList[0].requestID);
+	}
+	void testStructure() {
+		testConnectionList();
+		testRequesterList();
+		testWorkerList();
+		testJobList();
+	}
+// ============================================================================
