@@ -34,10 +34,7 @@ void signio_handler(int signo) {
                 printf("Hash = %s\n", res.other);
 				break;
             case DONE_FOUND: ;
-                char *password = getPassword(res.other);
-                char *hash = getHash(res.other);
-
-                printf("Hash = %s, Password = %s\n", hash, password);
+                printf("Password = %s\n", res.other);
 			default:
 				break;
 		}

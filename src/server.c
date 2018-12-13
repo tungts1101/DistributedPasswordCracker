@@ -64,6 +64,7 @@ void *ThreadRecv(void *threadArgs) {
 	Connection conn = {0, 0};
 	Requester requester = {0, {0, ""}};
 	Worker worker = {0, 0};
+	Request request = {0, ""};
 
 	int clientID;
 	char *other = malloc(MSG_OTHER_LENGTH);
@@ -75,10 +76,9 @@ void *ThreadRecv(void *threadArgs) {
 	int n;
 	while((n = recv(clientSock, (struct Message*)&req, sizeof req, 0)) > 0) {
 		switch(req.command) {
-			case HASH: ;
-				unsigned int requestID = ++requestNo;
-				Request request = {requestID, *req.other};
-				printf("==============");
+			case HASH:
+				request.requestID = ++requestNo;
+				strcpy(request.hash, req.other);
 
 				clientID = req.clientID;
 				if(clientID == 0) {
@@ -87,10 +87,9 @@ void *ThreadRecv(void *threadArgs) {
 					addConnection(conn);
 				}
 				
-				res = response(ACCEPT, clientID, requestID, "");
+				res = response(ACCEPT, clientID, request.requestID, "");
 				send(clientSock, (struct Message *)&res, sizeof res, 0);
 
-				printf("==============");
 				requester.clientID = clientID;
 				addRequester(requester);
 				addRequestToRequester(clientID, request);

@@ -9,8 +9,6 @@
 #include "object.h"
 #include "helper.h"
 
-enum FLAG{SUCCESS, FAIL};
-
 Connection connectionList[MAX_PENDING];
 
 Requester requesterList[MAX_PENDING - 1];
@@ -19,73 +17,80 @@ Worker workerList[MAX_PENDING - 1];
 
 Job jobList[MAX_JOB];
 
-struct Notice {
-	enum FLAG flag;
-	char *reason;
-};
-
 void init();
 
 // CONNECTION =================================================================
+	// handle when receiving HASH | JOING
 	unsigned int getNewClientID();
 	void addConnection(Connection conn);
+
+	// handle when PING not found
 	void removeConnection(unsigned int clientID);
+
 	void deleteConnection();
+
+	// debug only
 	void printConnection();
+
+	// handle when sending -> requester | worker
 	int getSocketDesc (unsigned int clientID);
 // ============================================================================
 
 // REQUESTER ==================================================================
-	struct Notice addRequester(Requester requester);
-	struct Notice addRequestToRequester(unsigned int clientID, Request request);
+	// handle when receiving HASH
+	void addRequester(Requester requester);
+
+	// handle when PING not found
+	void removeRequester(unsigned int clientID);
+	void deleteRequester();
+
+	// handle when receiving HASH
+	void addRequestToRequester(unsigned int clientID, Request request);
+
+	// handle when sending DONE_FOUND | DONE_NOT_FOUND -> requester
 	unsigned int getRequesterFromRequest(unsigned int requestID);
+
+	// handle when sending DONE_FOUND | DONE_NOT_FOUND -> requester
 	char *getHashFromRequest(unsigned int requestID);
+
+	// debug only
 	void printRequesterList();
 // ============================================================================
 
 // WORKER =====================================================================
-	struct Notice addWorkerList (Worker w);
+	// handle when receiving JOIN
+	void addWorker(Worker w);
 
-	/*
-	 * use it when distributing job for worker
-	 * */
-	int getFirstWorker();
+	// handle when PING not found
+	void removeWorker(unsigned int clientID);
+	void deleteWorker();
 	
+	// handle when sending JOB -> worker
+	int getFirstEnableWorker();
+	
+	// debug only
 	void printWorkerList();
 // ============================================================================
 
 // JOB ========================================================================
-	/*
-	 * use it when distributing job for worker
-	 * */
+	// handle when sending JOB -> worker
 	int getFirstJob();
+	void assignJob(Worker *w, Job *j);
 
-	/* 
-	 * receive HASH command from requester
-	 * split a request to 25 packages (from 'a' -> 'z')
-	 * and add to jobList
-	 * */
+	// handle when receving HASH
 	void splitJob(Request request);
 
-	/*
-	 * when connection lost (check by PING)
-	 * set all job.worker with that clientID to 0
-	 * */
+	// handle when PING worker not found
 	void recoverJob(unsigned int clientID);
 
-	/*
-	 * receive DONE_NOT_FOUND command from worker
-	 * (DONE_NOT_FOUND, workerID, requestID, package)
-	 * */
-	struct Notice deleteJob(unsigned int requestID, unsigned int package);
+	// handle when receiving DONE_NOT_FOUND
+	void deleteJob(unsigned int requestID, unsigned int package);
 
-	/*
-	 * receive DONE_FOUND command from worker
-	 * (DONE_FOUND, workerID, requestID, package)
-	 * remove all job with that requetsID from jobList
-	 * */
-	struct Notice removeJob(unsigned int requestID);
+	// handle when receving DONE_FOUND
+	// handle when PING requester not found
+	void removeJob(unsigned int requestID);
 
+	// debug only
 	void printJobList();
 // ============================================================================
 
