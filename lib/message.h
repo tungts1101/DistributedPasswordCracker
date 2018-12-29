@@ -8,14 +8,20 @@
 #include "command.h"
 #include "config.h"
 
-struct Message {
+typedef struct Message_ {
     enum COMMAND command;
     unsigned int clientID;
     unsigned int requestID;
     char other[MSG_OTHER_LENGTH];
-};
+} Message;
 
-struct Message request(enum COMMAND command, char *other);
-struct Message response(enum COMMAND command, unsigned int clientID, unsigned requestID, char *other);
+// construct Message
+Message request(enum COMMAND command, char *other);
+Message response(enum COMMAND command, unsigned int clientID, unsigned requestID, char *other);
+
+// handle Message.other
+char *getHash(char *other);
+char *getPassword(char *other);
+unsigned int getPackage(char *other);
 
 #endif

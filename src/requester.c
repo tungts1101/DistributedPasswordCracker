@@ -14,16 +14,15 @@
 #include "../lib/message.h"
 #include "../lib/connection.h"
 #include "../lib/error.h"
-#include "../lib/config.h"
-#include "../lib/other.h"
+
 #define MAX_LEN_BUF 30
 
-int sockfd;
+int sockfd = 0;
 unsigned int clientID;
 
 void signio_handler(int signo) {
 	int n;
-	struct Message res;
+	Message res;
 
 	if((n = recv(sockfd, (struct Message*)&res, sizeof res, 0)) > 0) {
         switch(res.command) {
@@ -35,10 +34,7 @@ void signio_handler(int signo) {
                 printf("Hash = %s\n", res.other);
 				break;
             case DONE_FOUND: ;
-                char *password = getPassword(res.other);
-                char *hash = getHash(res.other);
-
-                printf("Hash = %s, Password = %s\n", hash, password);
+                printf("Password = %s\n", res.other);
 			default:
 				break;
 		}
@@ -67,7 +63,7 @@ int main(int argc, char **argv)
 	if(fcntl(sockfd, __F_SETOWN, getpid()) < 0)
         error(ERR_OWN_SOCKET);
 
-    struct Message req;
+    Message req;
 
     char* s = (char *)malloc(MAX_LEN_BUF * sizeof(char));
     char* temp_string = (char *)malloc(MAX_LEN_BUF * sizeof(char));

@@ -7,16 +7,16 @@ SDIR = src
 TDIR = test
 IDIR = include
 
-_REQUESTER = connection.c error.c message.c other.c
+_REQUESTER = connection.c error.c message.c helper.c
 REQUESTER = $(patsubst %,$(IDIR)/%,$(_REQUESTER))
 
-_WORKER = connection.c error.c message.c other.c crypt.c
+_WORKER = connection.c error.c message.c helper.c
 WORKER = $(patsubst %,$(IDIR)/%,$(_WORKER))
 
-_SERVER = connection.c error.c message.c other.c crypt.c object.c structure.c
+_SERVER = connection.c error.c message.c helper.c object.c structure.c
 SERVER = $(patsubst %,$(IDIR)/%,$(_SERVER))
 
-_TEST = connection.c error.c message.c other.c crypt.c object.c structure.c
+_TEST = connection.c error.c message.c helper.c object.c structure.c
 TEST = $(patsubst %,$(IDIR)/%,$(_TEST))
 
 request:

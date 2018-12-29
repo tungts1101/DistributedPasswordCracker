@@ -7,50 +7,56 @@
 
 #include "config.h"
 
-struct Connection {
+struct Connection_ {
 	unsigned int clientID;
 	int sockfd;
 };
+typedef struct Connection_ Connection;
 
-struct Request {
+struct Request_ {
 	unsigned int requestID;
 	char hash[HASH_LENGTH];
 };
+typedef struct Request_ Request;
 
-struct Requester {
+struct Requester_ {
 	unsigned int clientID;
-	struct Request *request;
+	Request request[MAX_REQUEST];
 };
+typedef struct Requester_ Requester;
 
-struct Worker {
+struct Worker_ {
 	unsigned int clientID;
 	unsigned int jobNumber;
 };
+typedef struct Worker_ Worker;
 
-struct Job {
-	struct Worker worker;
+struct Job_ {
+	unsigned int workerID;
 	unsigned int requestID;
 	unsigned int package;
 };
+typedef struct Job_ Job;
 
 // CONNECTION =================================================================
-	struct Connection createConnection(unsigned int clientID, int sockfd);
+	void setConnection(Connection *conn, unsigned int ID, int sockfd);
 // ============================================================================
 
 // REQUEST ====================================================================
-	struct Request createRequest(unsigned int requestID, char *hash);
+	void setRequest(Request *req, unsigned int requestID, char *hash);
 // ============================================================================
 
 // REQUESTER ==================================================================
-	struct Requester createRequester(unsigned int clientID);
+	void setRequester(Requester *req, unsigned int ID);
 // ============================================================================
 
 // WORKER =====================================================================
-	struct Worker createWorker(unsigned int clientID);
+
 // ============================================================================
 
 // JOB ========================================================================
-	struct Job createJob(unsigned int requestID);
+	void setJob(Job *j, unsigned int workerID, unsigned int requestID, int package);
+	void resetJob(Job *j);
 // ============================================================================
 
 #endif

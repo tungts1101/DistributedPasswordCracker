@@ -9,94 +9,36 @@
 #include "../lib/structure.h"
 #include "../lib/object.h"
 
-struct Notice success() {
-	struct Notice notice;
-
-	notice.flag = SUCCESS;
-	notice.reason = "OK";
-
-	return notice;
+// execute to reset all structure
+void init() {
+	memset(&connectionList, 0, sizeof(connectionList));
+	memset(&requesterList, 0, sizeof(requesterList));
+	memset(&workerList, 0, sizeof(workerList));
+	memset(&jobList, 0, sizeof(jobList));
 }
-
-struct Notice failure(char *reason) {
-	struct Notice notice;
-	notice.reason = malloc(strlen(reason));
-
-	notice.flag = FAIL;
-	strcpy(notice.reason, reason);
-
-	return notice;
-}
-
-void initStructure() {
-	initConnection();
-	// initRequestList();
-	initRequesterList();
-	initWorkerList();
-	initJobQueue();
-}
-
 // CONNECTION =================================================================
-void initConnection() {
-	connectionList = (struct Connection *) malloc(MAX_PENDING * sizeof(struct Connection));
-
-	for(int i = 0; i < MAX_PENDING; i++) {
-		connectionList[i].clientID = 0;
-		connectionList[i].sockfd = 0;
-	}
-}
-
-int getConnectionLength() {
-	int i = 0;
-	while(connectionList[i++].clientID != 0);
-	return i - 1;
-}
-
-unsigned int getNewClientID() {
-	int i = 0;
-
-	while(connectionList[i++].clientID != 0);
-
+int getFirstConnection() {
+	int i = -1;
+	while(connectionList[++i].clientID != 0);
 	return i;
 }
-
-struct Notice addConnection (struct Connection conn) {
-	int i = 0;	
-
-	while(connectionList[i++].clientID != 0)
-		if(i == MAX_PENDING)
-			return failure("Connections are out of bounds");
-
-	connectionList[--i].clientID = conn.clientID;
-	connectionList[i].sockfd = conn.sockfd;
-
-	return success();
+unsigned int getNewClientID() {
+	return getFirstConnection() + 1;
 }
-
-struct Notice removeConnection (unsigned int clientID) {
-	int i = 0;
-
-	while(connectionList[i++].clientID != clientID)
-		if(i == MAX_PENDING)
-			return failure("Connection cannot be found");
-	
-	close(connectionList[--i].sockfd);
-	connectionList[i].clientID = 0;
-	connectionList[i].sockfd = 0;
-
-	return success();
+void addConnection(Connection conn) {
+	connectionList[getFirstConnection()] = conn;
 }
-
-struct Notice deleteConnection() {
+void removeConnection(unsigned int clientID) {
+	close(connectionList[clientID - 1].sockfd);
+	memset(&connectionList[clientID - 1], 0, sizeof(Connection));
+}
+void deleteConnection() {
 	for(int i = 0; i < MAX_PENDING; i++)
-		if(connectionList[i].sockfd != 0)
-			close(connectionList[i].sockfd);
-
-	free(connectionList);
-
-	return success();
+		removeConnection(i);
 }
-
+int getSocketDesc(unsigned int clientID) {
+	return connectionList[clientID - 1].sockfd;
+}
 void printConnection() {
 	printf("===== Connections: =====\n");
 
@@ -106,88 +48,33 @@ void printConnection() {
 	
 	printf("====================\n");
 }
-
-int getSocketDesc (unsigned int clientID) {
-	int i = 0;
-
-	while(connectionList[i++].clientID != clientID) {
-		if (i >= MAX_PENDING)
-			return 0;
-	}
-
-	return connectionList[--i].sockfd;
-}
-// ============================================================================
-
-// REQUEST ====================================================================
-// void initRequestList() {
-// 	for(int i = 0; i < (MAX_PENDING - 1) * MAX_REQUEST; i++)
-// 		requestList[i] = 0;
-// }
-
-// unsigned int getNewRequestID() {
-// 	int i = 0;
-
-// 	while(requestList[i++] != 0);
-
-// 	return i;
-// }
-
-// struct Notice addRequest(unsigned int requestID) {
-// 	int i = 0;
-
-// 	while(requestList[i++] != 0);
-
-// 	requestList[--i] = requestID;
-
-// 	return success();
-// }
 // ============================================================================
 
 // REQUESTER ==================================================================
-void initRequesterList() {
-	// leave one slot for worker
-	requesterList = (struct Requester *) malloc(sizeof(struct Requester) * (MAX_PENDING - 1));
-
-	for(int i = 0; i < MAX_PENDING - 1; i++) {
-		requesterList[i].clientID = 0;
-
-		// init request list
-		requesterList[i].request = (struct Request*) malloc((MAX_REQUEST - 1) * sizeof(struct Request));
-
-		for (int j = 0; j < MAX_REQUEST - 1; j++) {
-			requesterList[i].request[j].requestID = 0;
-			strcpy(requesterList[i].request[j].hash, "");
-		}
-	}
+int getFirstRequester() {
+	int i = -1;
+	while(requesterList[++i].clientID != 0);
+	return i;
 }
-
-struct Notice addRequester(struct Requester requester) {
-	int i = 0;
-	
-	while(requesterList[i++].clientID != 0);
-		if(i == MAX_PENDING - 1)
-			return failure("Requester list is already full");
-
-	requesterList[--i] = requester;
-
-	return success();
+void addRequester(Requester requester) {
+	requesterList[getFirstRequester()] = requester;
 }
+void removeRequester(unsigned int clientID) {
+	int i = -1;
+	while(requesterList[++i].clientID != clientID);
+	memset(&requesterList[i], 0, sizeof(Requester));
+}
+void deleteRequester() {
+	memset(&requesterList, 0, sizeof(requesterList));
+}
+void addRequestToRequester(unsigned int clientID, Request request) {
+	int i = -1;
+	while(requesterList[++i].clientID != clientID);
 
-struct Notice addRequestToRequester(unsigned int clientID, struct Request request) {
-	int i = 0;
-
-	while(requesterList[i++].clientID != clientID);
-
-	i--;
 	int j = 0;
 	while(requesterList[i].request[j++].requestID != 0);
-	
 	requesterList[i].request[--j] = request;
-
-	return success();
 }
-
 unsigned int getRequesterFromRequest(unsigned int requestID) {
 	int i = 0;
 	int j;
@@ -201,7 +88,6 @@ unsigned int getRequesterFromRequest(unsigned int requestID) {
 		i++;
 	}
 }
-
 char *getHashFromRequest(unsigned int requestID) {
 	int i = 0;
 	int j;
@@ -215,7 +101,6 @@ char *getHashFromRequest(unsigned int requestID) {
 		i++;
 	}
 }
-
 void printRequesterList() {
 	printf("===== Requester List: =====\n");
 
@@ -234,36 +119,26 @@ void printRequesterList() {
 // ============================================================================
 
 // WORKER =====================================================================
-void initWorkerList() {
-	// leave one slot for requester
-	workerList = (struct Worker *) malloc((MAX_PENDING - 1) * sizeof(struct Worker));
-
-	for(int i = 0; i < MAX_PENDING - 1; i++) {
-		workerList[i].clientID = 0;
-		workerList[i].jobNumber = 0;
-	}
-}
-
-struct Notice addWorkerList (struct Worker w) {
-	int i = 0;	
-
-	while(workerList[i++].clientID != 0)
-		if(i == MAX_PENDING - 1)
-			return failure("Worker list is already full");
-
-	workerList[--i] = w;
-
-	return success();
-}
-
 int getFirstWorker() {
+	int i = -1;
+	while(workerList[++i].clientID != 0);
+	return i;
+}
+void addWorker(Worker w) {
+	workerList[getFirstWorker()] = w;
+}
+void removeWorker(unsigned int clientID) {
+	int i = -1;
+	while(workerList[++i].clientID != clientID);
+	memset(&workerList[i], 0, sizeof(Worker));
+}
+int getFirstEnableWorker() {
 	for(int i = 0; i < MAX_PENDING - 1; i++)
-		if (workerList[i].clientID != 0 && workerList[i].jobNumber < MAX_JOB)
+		if (workerList[i].clientID != 0 && workerList[i].jobNumber < MAX_JOB_PER_WORKER)
 			return i;
 
 	return -1;
 }
-
 void printWorkerList() {
 	printf("===== Worker ID: =====\n");
 
@@ -276,77 +151,54 @@ void printWorkerList() {
 // ============================================================================
 
 // JOB ========================================================================
-const unsigned int maxJob = (MAX_PENDING - 1) * MAX_REQUEST * 25;
-
-void initJobQueue() {
-	jobQueue = (struct Job *) malloc(maxJob * sizeof(struct Job));
-
-	for(int i = 0; i < maxJob; i++) {
-		jobQueue[i].worker = createWorker(0);
-		jobQueue[i].requestID = 0;
-		jobQueue[i].package = 0;
-	}
-}
-
 int getFirstJob() {
-	for(int i = 0; i < maxJob; i++)
-		if(jobQueue[i].requestID != 0 && jobQueue[i].worker.clientID == 0)
+	for(int i = 0; i < MAX_JOB; i++)
+		if(jobList[i].requestID != 0 && jobList[i].workerID == 0)
 			return i;
 	
-	// if job queue is now full of worker
+	// if job list is now full of worker
 	return -1;
 }
-
-struct Notice splitJob(struct Request request) {
-	int i = 0;
-	struct Job job = createJob(request.requestID);
+void assignJob(Worker *w, Job *j) {
+	j->workerID = w->clientID;
+	w->jobNumber++;
+}
+void setJob(Job *j, unsigned int workerID, unsigned int requestID, int package) {
+	j->workerID = workerID;
+	j->requestID = requestID;
+	j->package = package;
+}
+void splitJob(Request request) {
+	int i = -1;
 	
-	for(int j = 1; j < 'z' - 'a' + 1; j++) {
-		job.package = j;
-		while(jobQueue[i++].requestID != 0);
-		jobQueue[--i] = job;
+	for(int j = 1; j < 26; j++) {
+		while(jobList[++i].requestID != 0);
+		setJob(&jobList[i], 0, request.requestID, j);
 	}
-
-	return success();
 }
-
-struct Notice recoverJob(unsigned int clientID) {
-	for(int i = 0; i < maxJob; i++)
-		if(jobQueue[i].worker.clientID = clientID)
-			jobQueue[i].worker.clientID = 0;
-	
-	return success();
+void recoverJob(unsigned int clientID) {
+	for(int i = 0; i < MAX_JOB; i++)
+		if(jobList[i].workerID == clientID)
+			jobList[i].workerID = 0;
 }
-
-struct Notice deleteJob(unsigned int requestID, unsigned int package) {
-	for(int i = 0; i < maxJob; i++)
-		if(jobQueue[i].requestID == requestID && jobQueue[i].package == package) {
-			jobQueue[i].worker.clientID = 0;
-			jobQueue[i].requestID = 0;
-			jobQueue[i].package = 0;
+void deleteJob(unsigned int requestID, unsigned int package) {
+	for(int i = 0; i < MAX_JOB; i++)
+		if(jobList[i].requestID == requestID && jobList[i].package == package) {
+			memset(&jobList[i], 0, sizeof(Job));
+			return;
 		}
-			
-	return success();
 }
-
-struct Notice removeJob(unsigned int requestID) {
-	for(int i = 0; i < maxJob; i++) {
-		if(jobQueue[i].requestID == requestID) {
-			jobQueue[i].worker.clientID = 0;
-			jobQueue[i].requestID = 0;
-			jobQueue[i].package = 0;	
-		}
-	}
-
-	return success();
+void removeJob(unsigned int requestID) {
+	for(int i = 0; i < MAX_JOB; i++)
+		if(jobList[i].requestID == requestID)
+			memset(&jobList[i], 0, sizeof(Job));
 }
-
-void printJobQueue() {
+void printJobList() {
 	printf("===== Job Queue =====\n");
 
-	for(int i = 0; i < maxJob; i++) {
-		if(jobQueue[i].requestID != 0) {
-			printf("WorkerID = %d, RequestID = %d, Packet = %d\n", jobQueue[i].worker.clientID,jobQueue[i].requestID, jobQueue[i].package);
+	for(int i = 0; i < MAX_JOB; i++) {
+		if(jobList[i].requestID != 0) {
+			printf("WorkerID = %d, RequestID = %d, Packet = %d\n", jobList[i].workerID,jobList[i].requestID, jobList[i].package);
 		}
 	}	
 

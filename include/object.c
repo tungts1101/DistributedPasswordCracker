@@ -7,64 +7,34 @@
 #include "../lib/object.h"
 
 // CONNECTION =================================================================
-struct Connection createConnection(unsigned int clientID, int sockfd) {
-	struct Connection conn;
-
-	conn.clientID = clientID;
-	conn.sockfd = sockfd;
-
-	return conn;
+void setConnection(Connection *conn, unsigned int clientID, int sockfd) {
+	conn->clientID = clientID;
+	conn->sockfd = sockfd;
 }
 // ============================================================================
 
 // REQUEST ====================================================================
-struct Request createRequest(unsigned int requestID, char *hash) {
-	struct Request r;
-
-	r.requestID = requestID;
-	strcpy(r.hash, hash);
-
-	return r;
+void setRequest(Request *req, unsigned int requestID, char *hash) {
+	req->requestID = requestID;
+	strcpy(req->hash, hash);	
 }
+
+
 // ============================================================================
 
 // REQUESTER ==================================================================
-struct Requester createRequester(unsigned int clientID) {
-	struct Requester r;
+void setRequester(Requester *req, unsigned int ID) {req->clientID = ID;};
 
-	r.clientID = clientID;
-
-	// init request list
-	r.request = (struct Request*) malloc(MAX_REQUEST * sizeof(struct Request));
-
-	for (int i = 0; i < MAX_REQUEST; i++) {
-		r.request[i].requestID = 0;
-		strcpy(r.request[i].hash, "");
-	}
-
-	return r;
-}
 // ============================================================================
 
 // WORKER =====================================================================
-struct Worker createWorker(unsigned int clientID) {
-	struct Worker w;
 
-	w.clientID = clientID;
-	w.jobNumber = 0;
-
-	return w;
-}
 // ============================================================================
 
 // JOB ========================================================================
-struct Job createJob(unsigned int requestID) {
-	struct Job j;
-
-	j.worker.clientID = 0;
-	j.requestID = requestID;
-	j.package = 0;
-
-	return j;
+void resetJob(Job *j) {
+	j->workerID = 0;
+	j->requestID = 0;
+	j->package = 0;
 }
 // ============================================================================

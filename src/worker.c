@@ -14,21 +14,21 @@
 #include "../lib/message.h"
 #include "../lib/connection.h"
 #include "../lib/error.h"
-#include "../lib/config.h"
-#include "../lib/crypt.h"
+#include "../lib/helper.h"
+
 #define MAX_LEN_BUF 30
 
 int sockfd;
 unsigned int clientID;
-struct Message *jobQueue;
+Message *jobQueue;
 void *ThreadWork(void *threadArgs);
 
 
 void initJobQueue() {
-	jobQueue = (struct Message *) malloc(15 * sizeof(struct Message));
+	jobQueue = (Message *) malloc(15 * sizeof(Message));
 }
 
-void addToQueue(struct Message job) {
+void addToQueue(Message job) {
     int i = 0;
 	
 	while(jobQueue[i++].requestID != 0);
@@ -36,9 +36,9 @@ void addToQueue(struct Message job) {
 	jobQueue[--i] = job;
 }
 
-struct Message getJobFromQueue() {
+Message getJobFromQueue() {
     int i = 0;
-    struct Message job = jobQueue[0];
+    Message job = jobQueue[0];
     //printf("%d\n",job.requestID);
     while (jobQueue[i+1].requestID != 0) {
         jobQueue[i] = jobQueue[i+1];
@@ -50,8 +50,8 @@ struct Message getJobFromQueue() {
 
 void signio_handler(int signo) {
 	int n;
-	struct Message res;
-	struct Message req;
+	Message res;
+	Message req;
 	char *hash;
 	char *password;
 
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 	if(fcntl(sockfd, __F_SETOWN, getpid()) < 0)
         error(ERR_OWN_SOCKET);
 
-    struct Message req;
+    Message req;
 
     char* s = (char *)malloc(MAX_LEN_BUF * sizeof(char));
     char* temp_string = (char *)malloc(MAX_LEN_BUF * sizeof(char));
@@ -125,10 +125,10 @@ int main(int argc, char **argv)
 
 void*ThreadWork(void* threadArgs) {
 	pthread_detach(pthread_self());
-    struct Message req;
+    Message req;
 
     while (1) {
-        struct Message job = getJobFromQueue();
+        Message job = getJobFromQueue();
         if (job.requestID != 0) {
             printf("Other: %s\n", job.other);
             char *password = solvePassword(job.other);
@@ -136,8 +136,9 @@ void*ThreadWork(void* threadArgs) {
 
             if(password == NULL)
                 req = response(DONE_NOT_FOUND, clientID, job.requestID, job.other);
-            else
-                req = response(DONE_FOUND, clientID, job.requestID, password);
+            else {
+				req = response(DONE_FOUND, clientID, job.requestID, password);
+			}
 
             send(sockfd, (struct Message *)&req, sizeof req, 0);
         }
