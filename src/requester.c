@@ -82,10 +82,12 @@ void signio_handler(int signo) {
 			case DONE_NOT_FOUND:
                 for (int i=0; i < MAX_REQUEST; i++) {
                     if (resultQueue[i].requestID == res.requestID) {
-                        resultQueue[i].count_nf++;
-                        progress = resultQueue[i].count_nf/26.0 * 100;
-                        snprintf(output, 50, "%f", progress);
-                        strcpy(resultQueue[i].result_msg, output);
+                        if (resultQueue[i].status == 0) {
+                            resultQueue[i].count_nf++;
+                            progress = resultQueue[i].count_nf/26.0 * 100;
+                            snprintf(output, 50, "%f", progress);
+                            strcpy(resultQueue[i].result_msg, output);
+                        }
                         break;
                     }
                 }

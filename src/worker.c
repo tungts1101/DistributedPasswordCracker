@@ -152,9 +152,9 @@ void*ThreadWork(void* threadArgs) {
     while (1) {
         struct Job job = getJobFromQueue();
         if (job.requestID != 0) {
-            printf("Other: %s\n", job.hash);
+            // printf("Other: %s\n", job.hash);
             char *password = solvePassword(job.hash);
-            printf("Password solve result: %s\n", password);
+            // printf("Password solve result: %s\n", password);
 
             if(password == NULL)
                 req = response(DONE_NOT_FOUND, clientID, job.requestID, job.hash);
