@@ -139,12 +139,20 @@ int getFirstEnableWorker() {
 
 	return -1;
 }
+void removeJobFromWorker(unsigned int clientID) {
+	for(int j = 0; j < MAX_PENDING - 1; j++)
+		if(workerList[j].clientID == clientID) { // update job number
+			workerList[j].jobNumber--;
+			printf("Worker %d has job number %d\n", workerList[j].clientID, workerList[j].jobNumber);
+			return;
+		}
+}
 void printWorkerList() {
 	printf("===== Worker ID: =====\n");
 
 	for(int i = 0; i < MAX_PENDING - 1; i++)
 		if(workerList[i].clientID != 0)
-			printf("%d has %d jobs", workerList[i].clientID, workerList[i].jobNumber);
+			printf("%d has %d jobs\n", workerList[i].clientID, workerList[i].jobNumber);
 	
 	printf("\n====================\n");
 }
@@ -181,31 +189,36 @@ void recoverJob(unsigned int clientID) {
 		if(jobList[i].workerID == clientID)
 			jobList[i].workerID = 0;
 }
-void deleteJob(unsigned int requestID, unsigned int package) {
+void removeJob(unsigned int requestID, unsigned int package) {
 	for(int i = 0; i < MAX_JOB; i++)
 		if(jobList[i].requestID == requestID && jobList[i].package == package) {
+			removeJobFromWorker(jobList[i].workerID);
+			// update job list
 			memset(&jobList[i], 0, sizeof(Job));
 			return;
 		}
 }
-void removeJob(unsigned int requestID) {
+void removeAllJobs(unsigned int requestID) {
 	for(int i = 0; i < MAX_JOB; i++)
-		if(jobList[i].requestID == requestID)
+		if(jobList[i].requestID == requestID) {
+			removeJobFromWorker(jobList[i].workerID);
+			// update job list
 			memset(&jobList[i], 0, sizeof(Job));
+		}		
 }
 unsigned int *getWorkerFromRequest(unsigned int requestID) {
-	unsigned int *worker = malloc(23 * sizeof(unsigned int));	// a magic number
+	unsigned int *worker = malloc(26 * sizeof(unsigned int));	// a magic number
 	int j = 0;
 
 	for(int i = 0; i < MAX_JOB; i++) {
 		if(jobList[i].requestID == requestID) {
 			int k = 0;
 
-			for(; k < 23; k++)
+			for(; k < 26; k++)
 				if(worker[k] == jobList[i].workerID)
 					break;
 
-			if(k == 23)		// add non-existed client to list
+			if(k == 26)		// add non-existed client to list
 				worker[j++] = jobList[i].workerID;
 		}
 	}

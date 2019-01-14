@@ -25,7 +25,7 @@ void *ThreadWork(void *threadArgs);
 
 
 void initJobQueue() {
-	jobQueue = (Message *) malloc(15 * sizeof(Message));
+	jobQueue = (Message *) malloc(MAX_JOB_PER_WORKER * sizeof(Message));
 }
 
 void addToQueue(Message job) {
@@ -54,8 +54,8 @@ void deleteSameJobFromQueue(int requestId) {
 	while(jobQueue[i].requestID != 0) {
         if (jobQueue[i].requestID == requestId) {
             jobQueue[i].requestID = 0;
-            i++;
         }
+        i++;
     }
 }
 

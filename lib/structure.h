@@ -68,6 +68,9 @@ void init();
 	// handle when sending JOB -> worker
 	int getFirstEnableWorker();
 	
+	// handle when solving one job
+	void removeJobFromWorker(unsigned int clientID);
+
 	// debug only
 	void printWorkerList();
 // ============================================================================
@@ -84,11 +87,11 @@ void init();
 	void recoverJob(unsigned int clientID);
 
 	// handle when receiving DONE_NOT_FOUND
-	void deleteJob(unsigned int requestID, unsigned int package);
+	void removeJob(unsigned int requestID, unsigned int package);
 
 	// handle when receving DONE_FOUND
 	// handle when PING requester not found
-	void removeJob(unsigned int requestID);
+	void removeAllJobs(unsigned int requestID);
 
 	// when receving DONE_FOUND
 	// get a list of workers are solving that job
