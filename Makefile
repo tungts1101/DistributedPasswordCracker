@@ -1,5 +1,5 @@
-LDIR = lib
 CC = gcc
+LDIR = lib
 CFLAGS = -I$(LDIR)
 
 BDIR = bin
@@ -19,17 +19,20 @@ SERVER = $(patsubst %,$(IDIR)/%,$(_SERVER))
 _TEST = connection.c error.c message.c helper.c object.c structure.c
 TEST = $(patsubst %,$(IDIR)/%,$(_TEST))
 
-request:
-	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/requester.c $(REQUESTER) -lcrypt
+create_bin_folder:
+	@[ -d $(BDIR) ] || mkdir -p $(BDIR)
 
-worker:
-	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/worker.c $(WORKER) -lcrypt -pthread
+request: create_bin_folder
+	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/requester.c $(REQUESTER) -lcrypt -std=gnu99
 
-server:
-	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/server.c $(SERVER) -lcrypt -pthread
+worker: create_bin_folder
+	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/worker.c $(WORKER) -lcrypt -pthread -std=gnu99
 
-test:
-	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/test.c $(TEST) -lcrypt
+server: create_bin_folder
+	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/server.c $(SERVER) -lcrypt -pthread -std=gnu99
+
+test: create_bin_folder
+	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/test.c $(TEST) -lcrypt -std=gnu99
 
 all: request worker server
 
