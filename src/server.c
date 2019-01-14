@@ -32,7 +32,7 @@ int main (int argc, char **argv) {
 	int listenfd, connfd;
 
 	if(argc == 2) {
-		if (strcmp(argv[1],"--d") == 0) {
+		if (strcmp(argv[1],"-d") == 0) {
 			debugFlag = 1;
 		}
 	}
@@ -161,6 +161,17 @@ void *ThreadRecv(void *threadArgs) {
 				send(sockfd, (struct Message *)&res, sizeof res, 0);
 				debugMsg(res, SEND);
 
+
+				unsigned int *worker = getWorkerFromRequest(req.requestID);
+				for (int i = 0; i < 23; i++) {
+					if(worker[i] != 0) {
+						sockfd = getSocketDesc(worker[i]);
+						res = response(DONE_FOUND, worker[i], req.requestID, "");
+
+						send(sockfd, (struct Message *)&res, sizeof res, 0);
+						debugMsg(res, SEND);
+					}
+				}
 				removeJob(req.requestID);
 				break;
 			default:
@@ -198,11 +209,11 @@ void*ThreadSend(void *threadArgs) {
 		if(jobPos != -1) {	// check if we have a job
 			workerPos = getFirstEnableWorker();
 			if(workerPos != -1) {	// check if we have a worker
-				printf("worker %d, job %d\n", workerPos, jobPos);
+				// printf("worker %d, job %d\n", workerPos, jobPos);
 				memset(&other, 0, sizeof other);
 				other = getMsgFromJob(jobList[jobPos]);
 
-				printf("other = %s\n", other);
+				// printf("other = %s\n", other);
 
 				sockfd = getSocketDesc(workerList[workerPos].clientID);
 
@@ -214,9 +225,9 @@ void*ThreadSend(void *threadArgs) {
 				}
 
 				assignJob(&workerList[workerPos], &jobList[jobPos]);	
-				printWorkerList();	// debug only
+				// printWorkerList();	// debug only
 			}
 		}
-		sleep(5);	// after interval
+		sleep(2);	// after interval
 	}
 }
