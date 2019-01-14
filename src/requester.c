@@ -85,7 +85,9 @@ void signio_handler(int signo) {
                         if (resultQueue[i].status == 0) {
                             resultQueue[i].count_nf++;
                             progress = resultQueue[i].count_nf/25.0 * 100;
-                            snprintf(output, 50, "%f", progress);
+                            if (progress < 100)
+                                snprintf(output, 50, "%f", progress);
+                            else strcpy(output, "No password found!");
                             strcpy(resultQueue[i].result_msg, output);
                         }
                         break;
@@ -103,6 +105,9 @@ void signio_handler(int signo) {
                 }      
                 break;  
                 //printf("Password = %s\n", res.other);
+            case SHUTDOWN:
+                exit(0);
+                break;
 			default:
 				break;
 		}

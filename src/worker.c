@@ -188,6 +188,9 @@ void *ThreadRecv(void *threadArgs) {
             case DONE_FOUND: ;
                 deleteSameJobFromQueue(res.requestID);
                 break;
+            case SHUTDOWN:
+                exit(0);
+                break;
 			default:
 				break;
 		}
