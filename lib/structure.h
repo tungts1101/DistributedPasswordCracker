@@ -34,6 +34,9 @@ void init();
 
 	// handle when sending -> requester | worker
 	int getSocketDesc (unsigned int clientID);
+
+	// handle when broadcasting DONE_FOUND
+	int getClientIDFromSocket(unsigned int sockfd);
 // ============================================================================
 
 // REQUESTER ==================================================================

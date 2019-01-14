@@ -9,6 +9,7 @@
 #include <sys/socket.h> // recv()
 #include <unistd.h>     // close()
 #include <pthread.h>    // POSIX thread
+#include <signal.h>
 #include "../lib/message.h"
 #include "../lib/connection.h"
 #include "../lib/config.h"
@@ -26,10 +27,18 @@ int listenfd;
 int requestNo = 0;	// keep track of number of requests
 int debugFlag = 0;
 
+void sigintHandler(int sig_num) 
+{ 
+    printf("\n Shutdown program \n");
+	exit(0);
+}
+
 int main (int argc, char **argv) {
 	pthread_t threadID;
 	struct ThreadArgs *threadArgs;
 	int listenfd, connfd;
+
+	signal(SIGINT, sigintHandler);
 
 	if(argc == 2) {
 		if (strcmp(argv[1],"-d") == 0) {
@@ -163,8 +172,16 @@ void *ThreadRecv(void *threadArgs) {
 
 
 				unsigned int *worker = getWorkerFromRequest(req.requestID);
+
+				// not sending back to worker solved problem
+				for (int i = 0; i < 26; i++)
+					if(worker[i] == getClientIDFromSocket(clientSock)) {
+						worker[i] = 0;
+						break;
+					}
+
 				for (int i = 0; i < 26; i++) {
-					if(worker[i] != 0) {
+					if(worker[i] != 0 && worker[i] != clientID) {
 						sockfd = getSocketDesc(worker[i]);
 						res = response(DONE_FOUND, worker[i], req.requestID, "");
 
@@ -209,7 +226,6 @@ void*ThreadSend(void *threadArgs) {
 		if(jobPos != -1) {	// check if we have a job
 			workerPos = getFirstEnableWorker();
 			if(workerPos != -1) {	// check if we have a worker
-				// printf("worker %d, job %d\n", workerPos, jobPos);
 				memset(&other, 0, sizeof other);
 				other = getMsgFromJob(jobList[jobPos]);
 
@@ -228,6 +244,6 @@ void*ThreadSend(void *threadArgs) {
 				printWorkerList();	// debug only
 			}
 		}
-		sleep(2);	// after interval
+		// sleep(1);	// after interval
 	}
 }
