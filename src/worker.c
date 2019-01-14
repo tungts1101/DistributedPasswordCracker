@@ -48,6 +48,17 @@ struct Message getJobFromQueue() {
     return job;
 }
 
+void deleteSameJobFromQueue(int requestId) {
+    int i = 0;
+	
+	while(jobQueue[i].requestID != 0) {
+        if (jobQueue[i].requestID == requestId) {
+            jobQueue[i].requestID = 0;
+            i++;
+        }
+    }
+}
+
 void signio_handler(int signo) {
 	int n;
 	struct Message res;
@@ -138,6 +149,7 @@ void*ThreadWork(void* threadArgs) {
                 req = response(DONE_NOT_FOUND, clientID, job.requestID, job.other);
             else {
 				req = response(DONE_FOUND, clientID, job.requestID, password);
+                deleteSameJobFromQueue(job.requestID);
 			}
 
             send(sockfd, (struct Message *)&req, sizeof req, 0);
