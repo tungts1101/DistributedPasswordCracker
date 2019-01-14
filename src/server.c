@@ -192,6 +192,7 @@ void *ThreadRecv(void *threadArgs) {
 						debugMsg(res, SEND);
 					}
 				}
+				// printf("%d\n",res.requestID);
 				removeAllJobs(req.requestID);
 				lock = 1;
 				break;
@@ -240,8 +241,10 @@ void*ThreadSend(void *threadArgs) {
 				if(sockfd != 0) {
 					res = response(JOB, workerList[workerPos].clientID, jobList[jobPos].requestID, other);
 				
-					send(sockfd, (struct Message*)&res, sizeof res, 0);
-					debugMsg(res, SEND);
+					if(lock == 1) {
+						send(sockfd, (struct Message*)&res, sizeof res, 0);
+						debugMsg(res, SEND);
+					}
 				}
 
 				if(lock == 1)

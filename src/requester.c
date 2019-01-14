@@ -84,7 +84,7 @@ void signio_handler(int signo) {
                     if (resultQueue[i].requestID == res.requestID) {
                         if (resultQueue[i].status == 0) {
                             resultQueue[i].count_nf++;
-                            progress = resultQueue[i].count_nf/26.0 * 100;
+                            progress = resultQueue[i].count_nf/25.0 * 100;
                             snprintf(output, 50, "%f", progress);
                             strcpy(resultQueue[i].result_msg, output);
                         }
