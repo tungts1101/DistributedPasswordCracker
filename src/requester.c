@@ -16,25 +16,47 @@
 #include "../lib/error.h"
 
 #define MAX_LEN_BUF 30
+#define MAX_LEN_LINK 80
 
 int sockfd = 0;
 unsigned int clientID;
 
+int menu() {
+    int kt;
+    printf("\nDistributed Password Cracker\n");
+    printf("1.Choose from file\n");
+    printf("2.Enter from keyboard\n");
+    printf("3.See result\n");
+    printf("4.Exit\n");
+    do
+        {
+        printf("You choose? ");
+        scanf("%d",&kt);
+        if (kt < 1 || kt > 4)
+            printf("Invalid option! Try again!\n");
+        }
+    while (kt < 1 || kt > 4);
+    return kt;
+}
+
 void signio_handler(int signo) {
-	int n;
+	int n, count_nf = 0;
+    float progress;
 	Message res;
+    char output[10];
 
 	if((n = recv(sockfd, (struct Message*)&res, sizeof res, 0)) > 0) {
         switch(res.command) {
 			case ACCEPT:
 				clientID = res.clientID;
-				printf("Now my ID = %u\n", clientID);
 				break;
 			case DONE_NOT_FOUND:
-                printf("Hash = %s\n", res.other);
+                count_nf++;
+                progress = count_nf/23.0 * 100;
 				break;
             case DONE_FOUND: ;
-                printf("Password = %s\n", res.other);
+                strcpy(output,res.other);                
+                //printf("Password = %s\n", res.other);
 			default:
 				break;
 		}
@@ -65,36 +87,49 @@ int main(int argc, char **argv)
 
     Message req;
 
-    char* s = (char *)malloc(MAX_LEN_BUF * sizeof(char));
-    char* temp_string = (char *)malloc(MAX_LEN_BUF * sizeof(char));
-    char* splitString;
-    int i = 0;
-    char outputStringArray[MAX_LEN_BUF][MAX_LEN_BUF];
+    int menu_check;
+    char* hash_string = (char *)malloc(MAX_LEN_BUF * sizeof(char));
+    char* file_link = (char *)malloc(MAX_LEN_BUF * sizeof(char));
+    FILE *fin;
+    menu_check = menu();
 
+    while (menu_check != 4)
+        switch (menu_check) {
+            case 1:
+                printf("Enter File Destination: ");
+                scanf("%s",file_link);
 
-    while(fgets(s, MAX_LEN_BUF, stdin) != NULL) {
-        i = 0;
-        strcpy(temp_string,s);
-        splitString = strtok(temp_string, "  \n");
-        while (splitString != NULL) {
-            strcpy(outputStringArray[i++], splitString);
-            splitString = strtok(NULL, " ");
+                if((fin = fopen(file_link, "r")) == NULL){
+                    printf("Error: File not found\n");
+                    continue;
+                } else {
+                    fgets(hash_string, MAX_LEN_BUF, fin);
+                    hash_string[strlen(hash_string)-1] = '\0';
+                    // Send hash to server
+                    req = response(HASH, clientID, 0, hash_string);
+                    send(sockfd, (struct Message*)&req, sizeof req, 0);
+                    //
+                }
+
+                menu_check = menu();
+                break;
+            case 2:
+                printf("Enter Hash String: ");
+                scanf("%s",hash_string);
+
+                // Send hash to server
+                req = response(HASH, clientID, 0, hash_string);
+                send(sockfd, (struct Message*)&req, sizeof req, 0);
+                //
+
+                menu_check = menu();
+                break;
+            case 3:
+
+                menu_check = menu();
+                break;
         }
-        
-        // Check loại connect
-        if (strcmp(outputStringArray[0],"HASH") == 0) {
-            outputStringArray[1][strlen(outputStringArray[1])-1] = '\0';
-            req = response(HASH, clientID, 0, outputStringArray[1]);
-            send(sockfd, (struct Message*)&req, sizeof req, 0);
-        } else {
-            printf("Wrong connection type\n");
-        }
-        
-        memset(temp_string,0,strlen(temp_string));
-
-		// req = response(HASH, clientID, 0, "aac4aqibO4kDg");
-        // send(sockfd, (struct Message*)&req, sizeof req, 0);
-    }
+    if (menu_check == 4) printf("Thank you!\n");
 
     exit(0);
 }
