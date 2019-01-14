@@ -90,7 +90,7 @@ void signio_handler(int signo) {
                     }
                 }
 				break;
-            case DONE_FOUND: ;
+            case DONE_FOUND:
                 strcpy(output,res.other);        
                 for (int i=0; i < MAX_REQUEST; i++) {
                     if (resultQueue[i].requestID == res.requestID) {
@@ -98,7 +98,8 @@ void signio_handler(int signo) {
                         resultQueue[i].status = 1;
                         break;
                     }
-                }        
+                }      
+                break;  
                 //printf("Password = %s\n", res.other);
 			default:
 				break;
