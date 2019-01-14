@@ -39,6 +39,11 @@ void deleteConnection() {
 int getSocketDesc(unsigned int clientID) {
 	return connectionList[clientID - 1].sockfd;
 }
+int getClientIDFromSocket(unsigned int sockfd) {
+	int i = -1;
+	while(connectionList[++i].sockfd != sockfd);
+	return connectionList[i].clientID;
+}
 void printConnection() {
 	printf("===== Connections: =====\n");
 
@@ -140,10 +145,10 @@ int getFirstEnableWorker() {
 	return -1;
 }
 void removeJobFromWorker(unsigned int clientID) {
-	for(int j = 0; j < MAX_PENDING - 1; j++)
-		if(workerList[j].clientID == clientID) { // update job number
-			workerList[j].jobNumber--;
-			printf("Worker %d has job number %d\n", workerList[j].clientID, workerList[j].jobNumber);
+	for(int i = 0; i < MAX_PENDING - 1; i++)
+		if(workerList[i].clientID == clientID) {
+			workerList[i].jobNumber--;
+			// printf("Worker %d has job number %d\n", workerList[i].clientID, workerList[i].jobNumber);
 			return;
 		}
 }
