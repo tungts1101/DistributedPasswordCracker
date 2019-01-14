@@ -39,23 +39,66 @@ int menu() {
     return kt;
 }
 
+struct Result {
+    unsigned int requestID;
+    char Hash[MAX_LEN_BUF];
+    char result_msg[50];
+    int count_nf;
+    int status;
+}; 
+
+struct Result *resultQueue;
+
+void initQueue() {
+	resultQueue = (struct Result *) malloc(MAX_REQUEST * sizeof(struct Result));
+}
+
+void addToQueue(struct Result result) {
+    int i = 0;
+	
+	while(resultQueue[i++].requestID != 0);
+
+	resultQueue[--i] = result;
+}
+
 void signio_handler(int signo) {
-	int n, count_nf = 0;
+	int n;
     float progress;
 	Message res;
+    struct Result result;
     char output[10];
 
 	if((n = recv(sockfd, (struct Message*)&res, sizeof res, 0)) > 0) {
         switch(res.command) {
 			case ACCEPT:
 				clientID = res.clientID;
+                result.requestID = res.requestID;
+                strcpy(result.result_msg,"0");
+                strcpy(result.Hash,res.other);
+                result.count_nf = 0;
+                result.status = 0;
+                addToQueue(result);
 				break;
 			case DONE_NOT_FOUND:
-                count_nf++;
-                progress = count_nf/23.0 * 100;
+                for (int i=0; i < MAX_REQUEST; i++) {
+                    if (resultQueue[i].requestID == res.requestID) {
+                        resultQueue[i].count_nf++;
+                        progress = resultQueue[i].count_nf/26.0 * 100;
+                        snprintf(output, 50, "%f", progress);
+                        strcpy(resultQueue[i].result_msg, output);
+                        break;
+                    }
+                }
 				break;
             case DONE_FOUND: ;
-                strcpy(output,res.other);                
+                strcpy(output,res.other);        
+                for (int i=0; i < MAX_REQUEST; i++) {
+                    if (resultQueue[i].requestID == res.requestID) {
+                        strcpy(resultQueue[i].result_msg, output);
+                        resultQueue[i].status = 1;
+                        break;
+                    }
+                }        
                 //printf("Password = %s\n", res.other);
 			default:
 				break;
@@ -93,6 +136,7 @@ int main(int argc, char **argv)
     FILE *fin;
     menu_check = menu();
 
+    initQueue();
     while (menu_check != 4)
         switch (menu_check) {
             case 1:
@@ -125,7 +169,16 @@ int main(int argc, char **argv)
                 menu_check = menu();
                 break;
             case 3:
-
+                for (int i=0; i < MAX_REQUEST; i++) {
+                    if (resultQueue[i].requestID != 0) {
+                        printf("\nID: %d\n",resultQueue[i].requestID);
+                        printf("Hash: %s\n",resultQueue[i].Hash);
+                        if (resultQueue[i].status == 1)
+                            printf("Result: %s\n",resultQueue[i].result_msg);
+                        else 
+                            printf("Progress: %s%%\n",resultQueue[i].result_msg);
+                    }
+                }
                 menu_check = menu();
                 break;
         }
