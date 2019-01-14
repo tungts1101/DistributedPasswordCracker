@@ -29,7 +29,18 @@ int debugFlag = 0;
 
 void sigintHandler(int sig_num) 
 { 
-    printf("\n Shutdown program \n");
+	Message res;
+	for(int i = 0; i < MAX_PENDING; i++) {
+		if(connectionList[i].clientID != 0) {
+			unsigned int clientID = connectionList[i].clientID;
+			unsigned int sockfd = connectionList[i].sockfd;
+			res = response(SHUTDOWN, clientID, 0, "");
+
+			send(sockfd, (struct Message *)&res, sizeof(res), 0);
+			removeConnection(clientID);
+		}
+	}
+    // printf("\n Shutdown program \n");
 	exit(0);
 }
 
