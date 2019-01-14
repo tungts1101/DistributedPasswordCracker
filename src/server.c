@@ -115,7 +115,7 @@ void *ThreadRecv(void *threadArgs) {
 					addConnection(conn);
 				}
 				
-				res = response(ACCEPT, clientID, request.requestID, "");
+				res = response(ACCEPT, clientID, request.requestID, request.hash);
 				send(clientSock, (struct Message *)&res, sizeof res, 0);
 				debugMsg(res, SEND);
 
@@ -150,7 +150,7 @@ void *ThreadRecv(void *threadArgs) {
 				send(sockfd, (struct Message *)&res, sizeof res, 0);
 				debugMsg(res, SEND);
 
-				deleteJob(req.requestID, package);
+				removeJob(req.requestID, package);
 				break;
 			case DONE_FOUND:
 				clientID = getRequesterFromRequest(req.requestID);
@@ -163,7 +163,7 @@ void *ThreadRecv(void *threadArgs) {
 
 
 				unsigned int *worker = getWorkerFromRequest(req.requestID);
-				for (int i = 0; i < 23; i++) {
+				for (int i = 0; i < 26; i++) {
 					if(worker[i] != 0) {
 						sockfd = getSocketDesc(worker[i]);
 						res = response(DONE_FOUND, worker[i], req.requestID, "");
@@ -172,7 +172,7 @@ void *ThreadRecv(void *threadArgs) {
 						debugMsg(res, SEND);
 					}
 				}
-				removeJob(req.requestID);
+				removeAllJobs(req.requestID);
 				break;
 			default:
 				break;
@@ -225,7 +225,7 @@ void*ThreadSend(void *threadArgs) {
 				}
 
 				assignJob(&workerList[workerPos], &jobList[jobPos]);	
-				// printWorkerList();	// debug only
+				printWorkerList();	// debug only
 			}
 		}
 		sleep(2);	// after interval
