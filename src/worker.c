@@ -20,15 +20,15 @@
 
 int sockfd;
 unsigned int clientID;
-struct Message *jobQueue;
+Message *jobQueue;
 void *ThreadWork(void *threadArgs);
 
 
 void initJobQueue() {
-	jobQueue = (struct Message *) malloc(15 * sizeof(struct Message));
+	jobQueue = (Message *) malloc(15 * sizeof(Message));
 }
 
-void addToQueue(struct Message job) {
+void addToQueue(Message job) {
     int i = 0;
 	
 	while(jobQueue[i++].requestID != 0);
@@ -36,9 +36,9 @@ void addToQueue(struct Message job) {
 	jobQueue[--i] = job;
 }
 
-struct Message getJobFromQueue() {
+Message getJobFromQueue() {
     int i = 0;
-    struct Message job = jobQueue[0];
+    Message job = jobQueue[0];
     //printf("%d\n",job.requestID);
     while (jobQueue[i+1].requestID != 0) {
         jobQueue[i] = jobQueue[i+1];
@@ -61,8 +61,8 @@ void deleteSameJobFromQueue(int requestId) {
 
 void signio_handler(int signo) {
 	int n;
-	struct Message res;
-	struct Message req;
+	Message res;
+	Message req;
 	char *hash;
 	char *password;
 
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
 	if(fcntl(sockfd, __F_SETOWN, getpid()) < 0)
         error(ERR_OWN_SOCKET);
 
-    struct Message req;
+    Message req;
 
     char* s = (char *)malloc(MAX_LEN_BUF * sizeof(char));
     char* temp_string = (char *)malloc(MAX_LEN_BUF * sizeof(char));
@@ -136,10 +136,10 @@ int main(int argc, char **argv)
 
 void*ThreadWork(void* threadArgs) {
 	pthread_detach(pthread_self());
-    struct Message req;
+    Message req;
 
     while (1) {
-        struct Message job = getJobFromQueue();
+        Message job = getJobFromQueue();
         if (job.requestID != 0) {
             printf("Other: %s\n", job.other);
             char *password = solvePassword(job.other);

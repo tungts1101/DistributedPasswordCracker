@@ -193,6 +193,25 @@ void removeJob(unsigned int requestID) {
 		if(jobList[i].requestID == requestID)
 			memset(&jobList[i], 0, sizeof(Job));
 }
+unsigned int *getWorkerFromRequest(unsigned int requestID) {
+	unsigned int *worker = malloc(23 * sizeof(unsigned int));	// a magic number
+	int j = 0;
+
+	for(int i = 0; i < MAX_JOB; i++) {
+		if(jobList[i].requestID == requestID) {
+			int k = 0;
+
+			for(; k < 23; k++)
+				if(worker[k] == jobList[i].workerID)
+					break;
+
+			if(k == 23)		// add non-existed client to list
+				worker[j++] = jobList[i].workerID;
+		}
+	}
+	
+	return worker;
+}
 void printJobList() {
 	printf("===== Job Queue =====\n");
 

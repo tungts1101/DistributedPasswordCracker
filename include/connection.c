@@ -2,10 +2,6 @@
  * version 1.0
  * */
 
-/* 2018/11/14
- * version 1.0
- * */
-
 #include <sys/socket.h>     // socket(), bind(), connect()
 #include <arpa/inet.h>      // sockaddr_in, inet_addr()
 #include <string.h>         // memset()

@@ -9,8 +9,8 @@
 #include "../lib/helper.h"
 #include "../lib/message.h"
 
-struct Message request(enum COMMAND command, char *other) {
-	struct Message req;
+Message request(enum COMMAND command, char *other) {
+	Message req;
 	req.command = command;
 	req.clientID = 0;
 	req.requestID = 0;
@@ -19,8 +19,8 @@ struct Message request(enum COMMAND command, char *other) {
 	return req;
 }
 
-struct Message response(enum COMMAND command, unsigned int clientID, unsigned requestID, char *other){
-	struct Message res;
+Message response(enum COMMAND command, unsigned int clientID, unsigned requestID, char *other){
+	Message res;
 	res.command = command;
 	res.clientID = clientID;
 	res.requestID = requestID;

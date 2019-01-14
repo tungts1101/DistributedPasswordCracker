@@ -90,6 +90,10 @@ void init();
 	// handle when PING requester not found
 	void removeJob(unsigned int requestID);
 
+	// when receving DONE_FOUND
+	// get a list of workers are solving that job
+	unsigned int *getWorkerFromRequest(unsigned int requestID);
+
 	// debug only
 	void printJobList();
 // ============================================================================

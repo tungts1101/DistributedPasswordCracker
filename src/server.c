@@ -24,11 +24,18 @@ struct ThreadArgs {
 
 int listenfd;
 int requestNo = 0;	// keep track of number of requests
+int debugFlag = 0;
 
 int main (int argc, char **argv) {
 	pthread_t threadID;
 	struct ThreadArgs *threadArgs;
 	int listenfd, connfd;
+
+	if(argc == 2) {
+		if (strcmp(argv[1],"-d") == 0) {
+			debugFlag = 1;
+		}
+	}
 
 	// init all data structure
 	init();
@@ -52,14 +59,34 @@ int main (int argc, char **argv) {
 	return 0;
 }
 
+typedef enum TYPE_ {
+	RECV,
+	SEND
+}TYPE;
+
+void debugMsg(Message msg, TYPE type) {
+	char s[15];
+	strcpy(s, commandStr[msg.command]);
+	int len = strlen(s)/sizeof(char);
+
+	if(debugFlag) {
+		if(type == RECV)
+			printf("SERVER <----%*s%*s----- Client: %u\n",
+				10+len/2,s,10-len/2,"",msg.clientID);
+		else if(type == SEND)
+			printf("SERVER -----%*s%*s----> Client: %u\n",
+				10+len/2,s,10-len/2,"",msg.clientID);	
+	}
+}
+
 void *ThreadRecv(void *threadArgs) {
-	int clientSock;
+	int clientSock = -1;
 
 	pthread_detach(pthread_self());
 	clientSock = ((struct ThreadArgs *) threadArgs) -> clntSock;
 
 	// handle logic when receving message
-	struct Message req, res;
+	Message req, res;
 
 	Connection conn = {0, 0};
 	Requester requester = {0, {0, ""}};
@@ -71,10 +98,11 @@ void *ThreadRecv(void *threadArgs) {
 	char *hash = malloc(HASH_LENGTH);
 	char *password = malloc(PW_LENGTH);
 	unsigned int package;
-	int sockfd;
+	int sockfd = 0;
 
 	int n;
 	while((n = recv(clientSock, (struct Message*)&req, sizeof req, 0)) > 0) {
+		debugMsg(req, RECV);
 		switch(req.command) {
 			case HASH:
 				request.requestID = ++requestNo;
@@ -89,6 +117,7 @@ void *ThreadRecv(void *threadArgs) {
 				
 				res = response(ACCEPT, clientID, request.requestID, "");
 				send(clientSock, (struct Message *)&res, sizeof res, 0);
+				debugMsg(res, SEND);
 
 				requester.clientID = clientID;
 				addRequester(requester);
@@ -100,12 +129,15 @@ void *ThreadRecv(void *threadArgs) {
 					clientID = getNewClientID();
 					setConnection(&conn, clientID, clientSock);
 					addConnection(conn);
+
 					res = response(ACCEPT, clientID, 0, "");
 					send(clientSock, (struct Message *)&res, sizeof res, 0);
+					debugMsg(res, SEND);
 
 					worker.clientID = clientID;
 					addWorker(worker);
 				}
+
 				break;
 			case DONE_NOT_FOUND:
 				clientID = getRequesterFromRequest(req.requestID);
@@ -114,7 +146,9 @@ void *ThreadRecv(void *threadArgs) {
 				package = getPackage(req.other);
 
 				res = response(DONE_NOT_FOUND, clientID, req.requestID, hash);
+				
 				send(sockfd, (struct Message *)&res, sizeof res, 0);
+				debugMsg(res, SEND);
 
 				deleteJob(req.requestID, package);
 				break;
@@ -123,8 +157,21 @@ void *ThreadRecv(void *threadArgs) {
 				sockfd = getSocketDesc(clientID);
 
 				res = response(DONE_FOUND, clientID, req.requestID, req.other);
-				send(sockfd, (struct Message *)&res, sizeof res, 0);
 
+				send(sockfd, (struct Message *)&res, sizeof res, 0);
+				debugMsg(res, SEND);
+
+
+				unsigned int *worker = getWorkerFromRequest(req.requestID);
+				for (int i = 0; i < 23; i++) {
+					if(worker[i] != 0) {
+						sockfd = getSocketDesc(worker[i]);
+						res = response(DONE_FOUND, worker[i], req.requestID, "");
+
+						send(sockfd, (struct Message *)&res, sizeof res, 0);
+						debugMsg(res, SEND);
+					}
+				}
 				removeJob(req.requestID);
 				break;
 			default:
@@ -151,9 +198,8 @@ char *getMsgFromJob(Job job) {
 void*ThreadSend(void *threadArgs) {
 	pthread_detach(pthread_self());
 
-	struct Message res;
+	Message res;
 	char *other = malloc(MSG_OTHER_LENGTH);
-	unsigned int workerID;
 	int sockfd;
 	int jobPos;
 	int workerPos;
@@ -163,11 +209,11 @@ void*ThreadSend(void *threadArgs) {
 		if(jobPos != -1) {	// check if we have a job
 			workerPos = getFirstEnableWorker();
 			if(workerPos != -1) {	// check if we have a worker
-				printf("worker %d, job %d\n", workerPos, jobPos);
+				// printf("worker %d, job %d\n", workerPos, jobPos);
 				memset(&other, 0, sizeof other);
 				other = getMsgFromJob(jobList[jobPos]);
 
-				printf("other = %s\n", other);
+				// printf("other = %s\n", other);
 
 				sockfd = getSocketDesc(workerList[workerPos].clientID);
 
@@ -175,12 +221,13 @@ void*ThreadSend(void *threadArgs) {
 					res = response(JOB, workerList[workerPos].clientID, jobList[jobPos].requestID, other);
 				
 					send(sockfd, (struct Message*)&res, sizeof res, 0);
+					debugMsg(res, SEND);
 				}
 
 				assignJob(&workerList[workerPos], &jobList[jobPos]);	
-				printWorkerList();	// debug only
+				// printWorkerList();	// debug only
 			}
 		}
-		sleep(5);	// after interval
+		sleep(2);	// after interval
 	}
 }

@@ -18,7 +18,7 @@
 #define MAX_LEN_BUF 30
 #define MAX_LEN_LINK 80
 
-int sockfd;
+int sockfd = 0;
 unsigned int clientID;
 
 int menu() {
@@ -42,7 +42,7 @@ int menu() {
 void signio_handler(int signo) {
 	int n, count_nf = 0;
     float progress;
-	struct Message res;
+	Message res;
     char output[10];
 
 	if((n = recv(sockfd, (struct Message*)&res, sizeof res, 0)) > 0) {
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
 	if(fcntl(sockfd, __F_SETOWN, getpid()) < 0)
         error(ERR_OWN_SOCKET);
 
-    struct Message req;
+    Message req;
 
     int menu_check;
     char* hash_string = (char *)malloc(MAX_LEN_BUF * sizeof(char));
