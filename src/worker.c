@@ -20,15 +20,20 @@
 
 int sockfd;
 unsigned int clientID;
-Message *jobQueue;
 void *ThreadWork(void *threadArgs);
 
+struct Job {
+    int requestID;
+    char hash[MAX_LEN_BUF];
+};
+
+struct Job *jobQueue;
 
 void initJobQueue() {
-	jobQueue = (Message *) malloc(MAX_JOB_PER_WORKER * sizeof(Message));
+	jobQueue = (struct Job *) malloc(MAX_JOB_PER_WORKER * sizeof(struct Job));
 }
 
-void addToQueue(Message job) {
+void addToQueue(struct Job job) {
     int i = 0;
 	
 	while(jobQueue[i++].requestID != 0);
@@ -36,9 +41,9 @@ void addToQueue(Message job) {
 	jobQueue[--i] = job;
 }
 
-Message getJobFromQueue() {
+struct Job getJobFromQueue() {
     int i = 0;
-    Message job = jobQueue[0];
+    struct Job job = jobQueue[0];
     //printf("%d\n",job.requestID);
     while (jobQueue[i+1].requestID != 0) {
         jobQueue[i] = jobQueue[i+1];
@@ -65,6 +70,7 @@ void signio_handler(int signo) {
 	Message req;
 	char *hash;
 	char *password;
+    struct Job job;
 
 	if((n = recv(sockfd, (struct Message *)&res, sizeof res, 0)) > 0) {
 		switch(res.command) {
@@ -74,8 +80,13 @@ void signio_handler(int signo) {
 				break;
 			case JOB: ;
                 printf("Receive Job\n");
-                addToQueue(res);
+                job.requestID = res.requestID;
+                strcpy(job.hash,res.other);
+                addToQueue(job);
 				break;
+            case DONE_FOUND: ;
+                deleteSameJobFromQueue(res.requestID);
+                break;
 			default:
 				break;
 		}
@@ -139,14 +150,14 @@ void*ThreadWork(void* threadArgs) {
     Message req;
 
     while (1) {
-        Message job = getJobFromQueue();
+        struct Job job = getJobFromQueue();
         if (job.requestID != 0) {
-            printf("Other: %s\n", job.other);
-            char *password = solvePassword(job.other);
+            printf("Other: %s\n", job.hash);
+            char *password = solvePassword(job.hash);
             printf("Password solve result: %s\n", password);
 
             if(password == NULL)
-                req = response(DONE_NOT_FOUND, clientID, job.requestID, job.other);
+                req = response(DONE_NOT_FOUND, clientID, job.requestID, job.hash);
             else {
 				req = response(DONE_FOUND, clientID, job.requestID, password);
                 deleteSameJobFromQueue(job.requestID);

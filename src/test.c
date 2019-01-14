@@ -125,7 +125,7 @@ void testSolvePassword() {
 		assert(1 == getFirstJob());
 
 		// worker solve password
-		removeJob(1);
+		removeAllJobs(1);
 
 		Request req_3 = {3, "aajZvqJxbbrPI"};
 		addRequestToRequester(1, req_3);
