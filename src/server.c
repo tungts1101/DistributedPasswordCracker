@@ -88,6 +88,8 @@ void debugMsg(Message msg, TYPE type) {
 	}
 }
 
+int lock = 1;
+
 void *ThreadRecv(void *threadArgs) {
 	int clientSock = -1;
 
@@ -162,6 +164,7 @@ void *ThreadRecv(void *threadArgs) {
 				removeJob(req.requestID, package);
 				break;
 			case DONE_FOUND:
+				lock = 0;
 				clientID = getRequesterFromRequest(req.requestID);
 				sockfd = getSocketDesc(clientID);
 
@@ -190,6 +193,7 @@ void *ThreadRecv(void *threadArgs) {
 					}
 				}
 				removeAllJobs(req.requestID);
+				lock = 1;
 				break;
 			default:
 				break;
@@ -240,7 +244,8 @@ void*ThreadSend(void *threadArgs) {
 					debugMsg(res, SEND);
 				}
 
-				assignJob(&workerList[workerPos], &jobList[jobPos]);	
+				if(lock == 1)
+					assignJob(&workerList[workerPos], &jobList[jobPos]);	
 				printWorkerList();	// debug only
 			}
 		}

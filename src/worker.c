@@ -21,6 +21,7 @@
 int sockfd;
 unsigned int clientID;
 void *ThreadWork(void *threadArgs);
+void *ThreadRecv(void *threadArgs);
 
 struct Job {
     int requestID;
@@ -83,6 +84,7 @@ void signio_handler(int signo) {
                 job.requestID = res.requestID;
                 strcpy(job.hash,res.other);
                 addToQueue(job);
+                printf("===========\n");
 				break;
             case DONE_FOUND: ;
                 deleteSameJobFromQueue(res.requestID);
@@ -93,6 +95,10 @@ void signio_handler(int signo) {
 	}
 }
 
+struct ThreadArgs {
+    int clntSock;
+};
+
 int main(int argc, char **argv)
 {
     // TODO: advanced check for arguments list
@@ -101,18 +107,26 @@ int main(int argc, char **argv)
     }
 
     pthread_t threadID;
-    pthread_create(&threadID, NULL, ThreadWork, NULL);
+    // pthread_create(&threadID, NULL, ThreadWork, NULL);
+
+    struct ThreadArgs *threadArgs;
     initJobQueue();
 
     sockfd = createTCPClientSocket(argv[1], SERV_PORT);
+    threadArgs = (struct ThreadArgs *)malloc(sizeof(struct ThreadArgs));
+    threadArgs -> clntSock = sockfd;
+		
+    pthread_create(&threadID, NULL, ThreadRecv, (void *) threadArgs);
+    pthread_create(&threadID, NULL, ThreadWork, (void *) threadArgs);
 
-    if(fcntl(sockfd, F_SETFL, O_NONBLOCK | O_ASYNC) < 0)
-        error(ERR_NON_BLK_ASYNC);
 
-	signal(SIGIO, signio_handler);
+    // if(fcntl(sockfd, F_SETFL, O_NONBLOCK | O_ASYNC))
+    //     error(ERR_NON_BLK_ASYNC);
 
-	if(fcntl(sockfd, __F_SETOWN, getpid()) < 0)
-        error(ERR_OWN_SOCKET);
+	// signal(SIGIO, signio_handler);
+
+	// if(fcntl(sockfd, __F_SETOWN, getpid()) < 0)
+    //     error(ERR_OWN_SOCKET);
 
     Message req;
 
@@ -145,11 +159,51 @@ int main(int argc, char **argv)
     exit(0);
 }
 
+void *ThreadRecv(void *threadArgs) {
+    int clientSock = -1;
+
+    pthread_detach(pthread_self());
+    clientSock = ((struct ThreadArgs *) threadArgs) -> clntSock;
+
+    int n;
+	Message res;
+	Message req;
+	char *hash;
+	char *password;
+    struct Job job;
+
+	while((n = recv(clientSock, (struct Message *)&res, sizeof res, 0)) > 0) {
+		switch(res.command) {
+			case ACCEPT:
+				clientID = res.clientID;
+				printf("Now my ID = %u\n", clientID);
+				break;
+			case JOB: ;
+                printf("Receive Job\n");
+                job.requestID = res.requestID;
+                strcpy(job.hash,res.other);
+                addToQueue(job);
+                printf("===========\n");
+				break;
+            case DONE_FOUND: ;
+                deleteSameJobFromQueue(res.requestID);
+                break;
+			default:
+				break;
+		}
+	}
+}
+
 void*ThreadWork(void* threadArgs) {
-	pthread_detach(pthread_self());
+	int clientSock = -1;
+
+    pthread_detach(pthread_self());
+    clientSock = ((struct ThreadArgs *) threadArgs) -> clntSock;
+
     Message req;
 
     while (1) {
+        // printf("...........................\n");
         struct Job job = getJobFromQueue();
         if (job.requestID != 0) {
             // printf("Other: %s\n", job.hash);
@@ -163,8 +217,8 @@ void*ThreadWork(void* threadArgs) {
                 deleteSameJobFromQueue(job.requestID);
 			}
 
-            send(sockfd, (struct Message *)&req, sizeof req, 0);
+            send(clientSock, (struct Message *)&req, sizeof req, 0);
         }
-        sleep(5);
+        sleep(1);
     }
 }
