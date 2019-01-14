@@ -20,16 +20,16 @@ _TEST = connection.c error.c message.c helper.c object.c structure.c
 TEST = $(patsubst %,$(IDIR)/%,$(_TEST))
 
 request:
-	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/requester.c $(REQUESTER) -lcrypt
+	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/requester.c $(REQUESTER) -lcrypt -std=gnu99
 
 worker:
-	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/worker.c $(WORKER) -lcrypt -pthread
+	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/worker.c $(WORKER) -lcrypt -pthread -std=gnu99
 
 server:
-	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/server.c $(SERVER) -lcrypt -pthread
+	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/server.c $(SERVER) -lcrypt -pthread -std=gnu99
 
 test:
-	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/test.c $(TEST) -lcrypt
+	@$(CC) $(CFLAGS) -o $(BDIR)/$@ $(SDIR)/test.c $(TEST) -lcrypt -std=gnu99
 
 all: request worker server
 
