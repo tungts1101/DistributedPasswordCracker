@@ -27,7 +27,7 @@ void init();
 	// handle when PING not found
 	void removeConnection(unsigned int clientID);
 
-	void deleteConnection();
+	void removeAllConnections();
 
 	// debug only
 	void printConnection();
@@ -45,7 +45,7 @@ void init();
 
 	// handle when PING not found
 	void removeRequester(unsigned int clientID);
-	void deleteRequester();
+	void removeAllRequesters();
 
 	// handle when receiving HASH
 	void addRequestToRequester(unsigned int clientID, Request request);
@@ -66,7 +66,7 @@ void init();
 
 	// handle when PING not found
 	void removeWorker(unsigned int clientID);
-	void deleteWorker();
+	void removeAllWorkers();
 	
 	// handle when sending JOB -> worker
 	int getFirstEnableWorker();

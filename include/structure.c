@@ -32,7 +32,7 @@ void removeConnection(unsigned int clientID) {
 	close(connectionList[clientID - 1].sockfd);
 	memset(&connectionList[clientID - 1], 0, sizeof(Connection));
 }
-void deleteConnection() {
+void removeAllConnections() {
 	for(int i = 0; i < MAX_PENDING; i++)
 		removeConnection(i);
 }
@@ -69,7 +69,7 @@ void removeRequester(unsigned int clientID) {
 	while(requesterList[++i].clientID != clientID);
 	memset(&requesterList[i], 0, sizeof(Requester));
 }
-void deleteRequester() {
+void removeAllRequesters() {
 	memset(&requesterList, 0, sizeof(requesterList));
 }
 void addRequestToRequester(unsigned int clientID, Request request) {
