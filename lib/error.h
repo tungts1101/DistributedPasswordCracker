@@ -14,7 +14,9 @@ typedef enum {
    ERR_LIST_FAILED,
    ERR_ACCE_FAILED,
    ERR_NON_BLK_ASYNC,
-   ERR_OWN_SOCKET
+   ERR_OWN_SOCKET,
+   ERR_OPEN_LOGS,
+   ERR_CLOSE_LOGS
 } ErrorCode;
 
 // kill process and notify about what error happened

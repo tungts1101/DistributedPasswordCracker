@@ -26,7 +26,6 @@ char *slice(char *string, int from, int to) {
 }
 
 unsigned int stringToUInt(char *string) {
-	unsigned int i;
 	char *ptr;
 
 	return (unsigned int) strtol(string, &ptr, 10);

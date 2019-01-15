@@ -39,4 +39,4 @@ all: request worker server
 .PHONY: clean
 
 clean:
-	rm bin/*
+	rm bin/* logs
