@@ -11,10 +11,10 @@
 
 // execute to reset all structure
 void init() {
-	memset(&connectionList, 0, sizeof(connectionList));
-	memset(&requesterList, 0, sizeof(requesterList));
-	memset(&workerList, 0, sizeof(workerList));
-	memset(&jobList, 0, sizeof(jobList));
+	memset(connectionList, 0, sizeof(connectionList));
+	memset(requesterList, 0, sizeof(requesterList));
+	memset(workerList, 0, sizeof(workerList));
+	memset(jobList, 0, sizeof(jobList));
 }
 // CONNECTION =================================================================
 int getFirstConnection() {
@@ -22,13 +22,13 @@ int getFirstConnection() {
 	while(connectionList[++i].clientID != 0);
 	return i;
 }
-unsigned int getNewClientID() {
+int getNewClientID() {
 	return getFirstConnection() + 1;
 }
 void addConnection(Connection conn) {
 	connectionList[getFirstConnection()] = conn;
 }
-void removeConnection(unsigned int clientID) {
+void removeConnection(int clientID) {
 	close(connectionList[clientID - 1].sockfd);
 	memset(&connectionList[clientID - 1], 0, sizeof(Connection));
 }
@@ -36,10 +36,10 @@ void removeAllConnections() {
 	for(int i = 0; i < MAX_PENDING; i++)
 		removeConnection(i);
 }
-int getSocketDesc(unsigned int clientID) {
+int getSocketDesc(int clientID) {
 	return connectionList[clientID - 1].sockfd;
 }
-int getClientIDFromSocket(unsigned int sockfd) {
+int getClientIDFromSocket(int sockfd) {
 	int i = -1;
 	while(connectionList[++i].sockfd != sockfd);
 	return connectionList[i].clientID;
@@ -64,7 +64,20 @@ int getFirstRequester() {
 void addRequester(Requester requester) {
 	requesterList[getFirstRequester()] = requester;
 }
-void removeRequester(unsigned int clientID) {
+int *getRequestFromRequester(int clientID) {
+	int *r = malloc(MAX_REQUEST * sizeof(int));
+	memset(r, 0, MAX_REQUEST);
+
+	for(int i = 0; i < MAX_PENDING - 1; i++)
+		if(requesterList[i].clientID == clientID) {
+			for(int j = 0; j < MAX_REQUEST; j++) {
+				r[j] = requesterList[i].request[j].requestID;
+			}
+				
+			return r;
+		}
+}
+void removeRequester(int clientID) {
 	int i = -1;
 	while(requesterList[++i].clientID != clientID);
 	memset(&requesterList[i], 0, sizeof(Requester));
@@ -72,7 +85,7 @@ void removeRequester(unsigned int clientID) {
 void removeAllRequesters() {
 	memset(&requesterList, 0, sizeof(requesterList));
 }
-void addRequestToRequester(unsigned int clientID, Request request) {
+void addRequestToRequester(int clientID, Request request) {
 	int i = -1;
 	while(requesterList[++i].clientID != clientID);
 
@@ -80,7 +93,7 @@ void addRequestToRequester(unsigned int clientID, Request request) {
 	while(requesterList[i].request[j++].requestID != 0);
 	requesterList[i].request[--j] = request;
 }
-unsigned int getRequesterFromRequest(unsigned int requestID) {
+int getRequesterFromRequest(int requestID) {
 	int i = 0;
 	int j;
 
@@ -93,7 +106,7 @@ unsigned int getRequesterFromRequest(unsigned int requestID) {
 		i++;
 	}
 }
-char *getHashFromRequest(unsigned int requestID) {
+char *getHashFromRequest(int requestID) {
 	int i = 0;
 	int j;
 
@@ -121,6 +134,19 @@ void printRequesterList() {
 
 	printf("====================\n");
 }
+
+int checkRequesterExist(int clientID) {
+	int flag = 0;
+
+	for(int i = 0; i < MAX_PENDING - 1; i++) {
+		if(requesterList[i].clientID == clientID) {
+			flag = 1;
+			return flag;
+		}
+	}
+
+	return flag;
+}
 // ============================================================================
 
 // WORKER =====================================================================
@@ -132,7 +158,7 @@ int getFirstWorker() {
 void addWorker(Worker w) {
 	workerList[getFirstWorker()] = w;
 }
-void removeWorker(unsigned int clientID) {
+void removeWorker(int clientID) {
 	int i = -1;
 	while(workerList[++i].clientID != clientID);
 	memset(&workerList[i], 0, sizeof(Worker));
@@ -144,7 +170,7 @@ int getFirstEnableWorker() {
 
 	return -1;
 }
-void removeJobFromWorker(unsigned int clientID) {
+void removeJobFromWorker(int clientID) {
 	for(int i = 0; i < MAX_PENDING - 1; i++)
 		if(workerList[i].clientID == clientID) {
 			workerList[i].jobNumber--;
@@ -161,6 +187,18 @@ void printWorkerList() {
 	
 	printf("\n====================\n");
 }
+int checkWorkerExist(int clientID) {
+	int flag = 0;
+
+	for(int i = 0; i < MAX_PENDING - 1; i++) {
+		if(workerList[i].clientID == clientID) {
+			flag = 1;
+			return flag;
+		}
+	}
+
+	return flag;
+}
 // ============================================================================
 
 // JOB ========================================================================
@@ -176,7 +214,7 @@ void assignJob(Worker *w, Job *j) {
 	j->workerID = w->clientID;
 	w->jobNumber++;
 }
-void setJob(Job *j, unsigned int workerID, unsigned int requestID, int package) {
+void setJob(Job *j, int workerID, int requestID, int package) {
 	j->workerID = workerID;
 	j->requestID = requestID;
 	j->package = package;
@@ -189,12 +227,12 @@ void splitJob(Request request) {
 		setJob(&jobList[i], 0, request.requestID, j);
 	}
 }
-void recoverJob(unsigned int clientID) {
+void recoverJob(int clientID) {
 	for(int i = 0; i < MAX_JOB; i++)
 		if(jobList[i].workerID == clientID)
 			jobList[i].workerID = 0;
 }
-void removeJob(unsigned int requestID, unsigned int package) {
+void removeJob(int requestID, int package) {
 	for(int i = 0; i < MAX_JOB; i++)
 		if(jobList[i].requestID == requestID && jobList[i].package == package) {
 			removeJobFromWorker(jobList[i].workerID);
@@ -203,7 +241,7 @@ void removeJob(unsigned int requestID, unsigned int package) {
 			return;
 		}
 }
-void removeAllJobs(unsigned int requestID) {
+void removeAllJobs(int requestID) {
 	for(int i = 0; i < MAX_JOB; i++)
 		if(jobList[i].requestID == requestID) {
 			removeJobFromWorker(jobList[i].workerID);
@@ -211,8 +249,10 @@ void removeAllJobs(unsigned int requestID) {
 			memset(&jobList[i], 0, sizeof(Job));
 		}		
 }
-unsigned int *getWorkerFromRequest(unsigned int requestID) {
-	unsigned int *worker = malloc(26 * sizeof(unsigned int));	// a magic number
+int *getWorkerFromRequest(int requestID) {
+	int *worker = malloc(26 * sizeof(int));	// a magic number
+	memset(worker, 0, 26);
+
 	int j = 0;
 
 	for(int i = 0; i < MAX_JOB; i++) {

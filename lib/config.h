@@ -14,6 +14,9 @@
 #define MAX_PENDING 10
 #define SERV_PORT 3000
 
+#define TIMEOUT_SECS 2
+#define MAXTRIES 3
+
 #define MAX_JOB_PER_WORKER 15
 
 #define MAX_REQUEST 30

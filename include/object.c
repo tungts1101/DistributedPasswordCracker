@@ -7,14 +7,14 @@
 #include "../lib/object.h"
 
 // CONNECTION =================================================================
-void setConnection(Connection *conn, unsigned int clientID, int sockfd) {
+void setConnection(Connection *conn, int clientID, int sockfd) {
 	conn->clientID = clientID;
 	conn->sockfd = sockfd;
 }
 // ============================================================================
 
 // REQUEST ====================================================================
-void setRequest(Request *req, unsigned int requestID, char *hash) {
+void setRequest(Request *req, int requestID, char *hash) {
 	req->requestID = requestID;
 	strcpy(req->hash, hash);	
 }
@@ -23,7 +23,7 @@ void setRequest(Request *req, unsigned int requestID, char *hash) {
 // ============================================================================
 
 // REQUESTER ==================================================================
-void setRequester(Requester *req, unsigned int ID) {req->clientID = ID;};
+void setRequester(Requester *req, int ID) {req->clientID = ID;};
 
 // ============================================================================
 

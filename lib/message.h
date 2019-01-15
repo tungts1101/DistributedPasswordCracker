@@ -10,18 +10,17 @@
 
 typedef struct Message_ {
     enum COMMAND command;
-    unsigned int clientID;
-    unsigned int requestID;
+    int clientID;
+    int requestID;
     char other[MSG_OTHER_LENGTH];
 } Message;
 
 // construct Message
-Message request(enum COMMAND command, char *other);
-Message response(enum COMMAND command, unsigned int clientID, unsigned requestID, char *other);
+Message response(enum COMMAND command, int clientID, unsigned requestID, char *other);
 
 // handle Message.other
 char *getHash(char *other);
 char *getPassword(char *other);
-unsigned int getPackage(char *other);
+int getPackage(char *other);
 
 #endif

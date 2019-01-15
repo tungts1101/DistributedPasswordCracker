@@ -7,6 +7,6 @@
 
 char *solvePassword(char *other);
 char *slice(char *string, int from, int to);
-unsigned int stringToUInt(char *string);
+int stringToUInt(char *string);
 
 #endif

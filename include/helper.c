@@ -25,14 +25,14 @@ char *slice(char *string, int from, int to) {
 	return substr;
 }
 
-unsigned int stringToUInt(char *string) {
+int stringToUInt(char *string) {
 	char *ptr;
 
-	return (unsigned int) strtol(string, &ptr, 10);
+	return (int) strtol(string, &ptr, 10);
 }
 
 char *getFrom(char *other) {
-	unsigned int package = getPackage(other);
+	int package = getPackage(other);
 
 	char *from = malloc(PW_LENGTH);
 	memset(from, 'a', PW_LENGTH);

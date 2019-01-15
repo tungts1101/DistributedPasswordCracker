@@ -19,7 +19,7 @@
 #define MAX_LEN_BUF 30
 
 int sockfd;
-unsigned int clientID;
+int clientID;
 void *ThreadWork(void *threadArgs);
 void *ThreadRecv(void *threadArgs);
 
@@ -95,6 +95,12 @@ void signio_handler(int signo) {
 	}
 }
 
+void sigintHandler(int sig_num) {
+    Message msg = response(QUIT, clientID, 0, "");
+    send(sockfd, (struct Message *)&msg, sizeof msg, 0);
+    exit(0);
+}
+
 struct ThreadArgs {
     int clntSock;
 };
@@ -113,6 +119,9 @@ int main(int argc, char **argv)
     initJobQueue();
 
     sockfd = createTCPClientSocket(argv[1], SERV_PORT);
+
+    signal(SIGINT, sigintHandler);
+
     threadArgs = (struct ThreadArgs *)malloc(sizeof(struct ThreadArgs));
     threadArgs -> clntSock = sockfd;
 		
@@ -186,6 +195,9 @@ void *ThreadRecv(void *threadArgs) {
                 printf("===========\n");
 				break;
             case DONE_FOUND: ;
+                deleteSameJobFromQueue(res.requestID);
+                break;
+            case STOP:
                 deleteSameJobFromQueue(res.requestID);
                 break;
             case SHUTDOWN:

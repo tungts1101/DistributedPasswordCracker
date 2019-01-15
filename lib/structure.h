@@ -21,11 +21,11 @@ void init();
 
 // CONNECTION =================================================================
 	// handle when receiving HASH | JOING
-	unsigned int getNewClientID();
+	int getNewClientID();
 	void addConnection(Connection conn);
 
 	// handle when PING not found
-	void removeConnection(unsigned int clientID);
+	void removeConnection(int clientID);
 
 	void removeAllConnections();
 
@@ -33,10 +33,10 @@ void init();
 	void printConnection();
 
 	// handle when sending -> requester | worker
-	int getSocketDesc (unsigned int clientID);
+	int getSocketDesc (int clientID);
 
 	// handle when broadcasting DONE_FOUND
-	int getClientIDFromSocket(unsigned int sockfd);
+	int getClientIDFromSocket(int sockfd);
 // ============================================================================
 
 // REQUESTER ==================================================================
@@ -44,17 +44,20 @@ void init();
 	void addRequester(Requester requester);
 
 	// handle when PING not found
-	void removeRequester(unsigned int clientID);
+	int *getRequestFromRequester(int clientID);
+	void removeRequester(int clientID);
 	void removeAllRequesters();
 
 	// handle when receiving HASH
-	void addRequestToRequester(unsigned int clientID, Request request);
+	void addRequestToRequester(int clientID, Request request);
 
 	// handle when sending DONE_FOUND | DONE_NOT_FOUND -> requester
-	unsigned int getRequesterFromRequest(unsigned int requestID);
+	int getRequesterFromRequest(int requestID);
 
 	// handle when sending DONE_FOUND | DONE_NOT_FOUND -> requester
-	char *getHashFromRequest(unsigned int requestID);
+	char *getHashFromRequest(int requestID);
+
+	int checkRequesterExist(int clientID);
 
 	// debug only
 	void printRequesterList();
@@ -65,14 +68,16 @@ void init();
 	void addWorker(Worker w);
 
 	// handle when PING not found
-	void removeWorker(unsigned int clientID);
+	void removeWorker(int clientID);
 	void removeAllWorkers();
 	
 	// handle when sending JOB -> worker
 	int getFirstEnableWorker();
 	
 	// handle when solving one job
-	void removeJobFromWorker(unsigned int clientID);
+	void removeJobFromWorker(int clientID);
+
+	int checkWorkerExist(int clientID);
 
 	// debug only
 	void printWorkerList();
@@ -86,19 +91,19 @@ void init();
 	// handle when receving HASH
 	void splitJob(Request request);
 
-	// handle when PING worker not found
-	void recoverJob(unsigned int clientID);
+	// handle when PING worker not succeed
+	void recoverJob(int clientID);
 
 	// handle when receiving DONE_NOT_FOUND
-	void removeJob(unsigned int requestID, unsigned int package);
+	void removeJob(int requestID, int package);
 
 	// handle when receving DONE_FOUND
 	// handle when PING requester not found
-	void removeAllJobs(unsigned int requestID);
+	void removeAllJobs(int requestID);
 
 	// when receving DONE_FOUND
 	// get a list of workers are solving that job
-	unsigned int *getWorkerFromRequest(unsigned int requestID);
+	int *getWorkerFromRequest(int requestID);
 
 	// debug only
 	void printJobList();

@@ -9,9 +9,9 @@
 #include <sys/socket.h> // recv()
 #include <unistd.h>     // close()
 #include <pthread.h>    // POSIX thread
-#include <signal.h>
-#include <time.h>
-#include <getopt.h>
+#include <signal.h>	// signal()
+#include <time.h>	// time_t, struct tm
+#include <getopt.h>	// getopt()
 #include "../lib/message.h"
 #include "../lib/connection.h"
 #include "../lib/config.h"
@@ -31,12 +31,14 @@ int debugFlag = 0;
 int helpFlag = 0;
 int lock = 1;	// handle data race between 2 threads
 int port = 0;
+int tries = 0;
+int count = 0;
+pthread_t threadID[MAX_PENDING+2];
 FILE *logFp;
 
 void handleCommandArg(int argc, char **argv);
 
 int main (int argc, char **argv) {
-	pthread_t threadID;
 	struct ThreadArgs *threadArgs;
 	int listenfd, connfd;
 	int port = 0;
@@ -53,16 +55,21 @@ int main (int argc, char **argv) {
 	// ===============================
 
 	signal(SIGINT, sigintHandler);	// handle Ctr+C
+	signal(SIGPIPE, SIG_IGN);
 
 	handleCommandArg(argc, argv);	// handle command line argument
 
 	init();	// init all data structure
 
+	// for(int i = 0; i < MAX_PENDING - 1; i++)
+	// 	for(int j = 0; j < MAX_REQUEST; j++)
+	// 		printf("%d\n", requesterList[i].request[j].requestID);
+
 	port = port ? port : SERV_PORT;
 	listenfd = createTCPServerSocket(port);
 
 	// spawn a thread for sending job purpose
-	pthread_create(&threadID, NULL, ThreadSend, NULL);
+	pthread_create(&threadID[count++], NULL, ThreadSend, NULL);
 
 	while(1) {
 		connfd = acceptTCPConnection(listenfd);
@@ -70,7 +77,7 @@ int main (int argc, char **argv) {
 		threadArgs = (struct ThreadArgs *)malloc(sizeof(struct ThreadArgs));
 		threadArgs -> clntSock = connfd;
 		
-		pthread_create(&threadID, NULL, ThreadRecv, (void *) threadArgs);
+		pthread_create(&threadID[count++], NULL, ThreadRecv, (void *) threadArgs);
 	}
 
 	// closing logs file
@@ -155,9 +162,7 @@ void writeToLog(Message msg, TYPE type) {
 }
 
 void sendMsg(int sockfd, Message msg) {
-	if(send(sockfd, (struct Message *)&msg, sizeof(msg), 0) < 0)
-		error(ERR_SEND_FAILED);
-
+	send(sockfd, (struct Message*)&msg, sizeof msg, 0);
 	writeToLog(msg, SEND);
 
 	if(debugFlag)
@@ -177,105 +182,164 @@ void sigintHandler(int sig_num) {
 		}
 	}
 
+	// wait for all child thread terminate
+	for(int i = 0; i < MAX_PENDING + 2; i++)
+		pthread_join(threadID[i], NULL);
+	
 	exit(0);
 }
 
-void *ThreadRecv(void *threadArgs) {
-	int clientSock = -1;
+Connection conn = {0, 0};
+Requester requester = {0, {0, ""}};
+Worker worker = {0, 0};
+Request request = {0, ""};
 
-	pthread_detach(pthread_self());
-	clientSock = ((struct ThreadArgs *) threadArgs) -> clntSock;
+void handleHashRequest(int sockfd, Message msg) {
+	request.requestID = ++requestNo;
+	strcpy(request.hash, msg.other);
 
-	// handle logic when receving message
-	Message req, res;
+	int clientID = msg.clientID;
+	if(clientID == 0) {
+		clientID = getNewClientID();
+		setConnection(&conn, clientID, sockfd);
+		addConnection(conn);
 
-	Connection conn = {0, 0};
-	Requester requester = {0, {0, ""}};
-	Worker worker = {0, 0};
-	Request request = {0, ""};
+		requester.clientID = clientID;
+		addRequester(requester);
+	}
 
-	int clientID;
-	char *other = malloc(MSG_OTHER_LENGTH);
-	char *hash = malloc(HASH_LENGTH);
-	char *password = malloc(PW_LENGTH);
-	unsigned int package;
-	int sockfd = 0;
+	Message res = response(ACCEPT, clientID, request.requestID, request.hash);
+	sendMsg(sockfd, res);
 
-	int n;
-	while((n = recv(clientSock, (struct Message *)&req, sizeof(req), 0)) > 0) {
-		writeToLog(req, RECV);
+	addRequestToRequester(clientID, request);
+	// printRequesterList();
+	splitJob(request);
+}
 
-		if(debugFlag)
-			debug(req, RECV);
+void handleJoinRequest(int sockfd, Message msg) {
+	if(msg.clientID == 0) {
+		int clientID = getNewClientID();
+		setConnection(&conn, clientID, sockfd);
+		addConnection(conn);
 
-		switch(req.command) {
-			case HASH:
-				request.requestID = ++requestNo;
-				strcpy(request.hash, req.other);
+		Message res = response(ACCEPT, clientID, 0, "");
+		sendMsg(sockfd, res);
 
-				clientID = req.clientID;
-				if(clientID == 0) {
-					clientID = getNewClientID();
-					setConnection(&conn, clientID, clientSock);
-					addConnection(conn);
-				}
-				
-				res = response(ACCEPT, clientID, request.requestID, request.hash);
+		worker.clientID = clientID;
+		addWorker(worker);
+	}
+}
+
+void handleDNFRequest(int sockfd, Message msg) {
+	int clientID = getRequesterFromRequest(msg.requestID);
+	int clientSock = getSocketDesc(clientID);
+	char *hash = getHash(msg.other);
+	int package = getPackage(msg.other);
+
+	Message res = response(DONE_NOT_FOUND, clientID, msg.requestID, hash);
+
+	if(clientID != 0)
+		sendMsg(clientSock, res);
+
+	removeJob(msg.requestID, package);
+}
+
+void handleDFRequest(int sockfd, Message msg) {
+	lock = 0;
+	int clientID = getRequesterFromRequest(msg.requestID);
+	int clientSock = getSocketDesc(clientID);
+
+	Message res = response(DONE_FOUND, clientID, msg.requestID, msg.other);
+	sendMsg(clientSock, res);
+
+	// broadcast DONE_FOUND to all workers
+	int *worker = getWorkerFromRequest(msg.requestID);
+
+	for (int i = 0; i < 26; i++) {
+		if(worker[i] != 0) {
+			clientSock = getSocketDesc(worker[i]);
+			res = response(DONE_FOUND, worker[i], msg.requestID, "");
+
+			if(clientSock != sockfd)	// not sending back to worker solved problem
 				sendMsg(clientSock, res);
+		}
+	}
 
-				requester.clientID = clientID;
-				addRequester(requester);
-				addRequestToRequester(clientID, request);
-				splitJob(request);
-				break;
-			case JOIN:
-				if(req.clientID == 0) {
-					clientID = getNewClientID();
-					setConnection(&conn, clientID, clientSock);
-					addConnection(conn);
+	removeAllJobs(msg.requestID);
+	lock = 1;
+}
 
-					res = response(ACCEPT, clientID, 0, "");
-					sendMsg(clientSock, res);
+void handleQuitRequest(int sockfd, Message msg) {
+	int clientID = getClientIDFromSocket(sockfd);
+	recoverJob(clientID);
+	removeWorker(clientID);
+	removeConnection(clientID);
+}
 
-					worker.clientID = clientID;
-					addWorker(worker);
-				}
+void handleStopRequest(int sockfd, Message msg) {
+	if(msg.clientID != 0) {
+		int clientID = getClientIDFromSocket(sockfd);
+		int *request = getRequestFromRequester(clientID);
 
-				break;
-			case DONE_NOT_FOUND:
-				clientID = getRequesterFromRequest(req.requestID);
-				sockfd = getSocketDesc(clientID);
-				hash = getHash(req.other);
-				package = getPackage(req.other);
 
-				res = response(DONE_NOT_FOUND, clientID, req.requestID, hash);
-				sendMsg(sockfd, res);
+		int clientSock;
+		Message res;
 
-				removeJob(req.requestID, package);
-				break;
-			case DONE_FOUND:
+		for(int i = 0; i < MAX_REQUEST; i++)
+			if(request[i] != 0) {
 				lock = 0;
-				clientID = getRequesterFromRequest(req.requestID);
-				sockfd = getSocketDesc(clientID);
+				int *worker = getWorkerFromRequest(request[i]);
 
-				res = response(DONE_FOUND, clientID, req.requestID, req.other);
-				sendMsg(sockfd, res);
-
-				// broadcast DONE_FOUND to all workers
-				unsigned int *worker = getWorkerFromRequest(req.requestID);
-
-				for (int i = 0; i < 26; i++) {
-					if(worker[i] != 0) {
-						sockfd = getSocketDesc(worker[i]);
-						res = response(DONE_FOUND, worker[i], req.requestID, "");
-
-						if(sockfd != clientSock)	// not sending back to worker solved problem
-							sendMsg(sockfd, res);
+				for (int j = 0; j < 26; j++) {
+					if(worker[j] != 0) {
+						clientSock = getSocketDesc(worker[i]);
+						res = response(STOP, worker[j], request[i], "");
+						sendMsg(clientSock, res);
 					}
 				}
 
-				removeAllJobs(req.requestID);
+				removeAllJobs(request[i]);
 				lock = 1;
+			}
+		
+		removeRequester(clientID);
+		removeConnection(clientID);
+	}
+}
+
+void *ThreadRecv(void *threadArgs) {
+	int sockfd = -1;
+
+	pthread_detach(pthread_self());
+	sockfd = ((struct ThreadArgs *) threadArgs) -> clntSock;
+	free(threadArgs);
+
+	Message msg;
+
+	while(recv(sockfd, (struct Message *)&msg, sizeof(msg), 0) > 0) {
+		writeToLog(msg, RECV);
+
+		if(debugFlag)
+			debug(msg, RECV);
+
+		switch(msg.command) {
+			case HASH:
+				handleHashRequest(sockfd, msg);
+				break;
+			case JOIN:
+				handleJoinRequest(sockfd, msg);
+				break;
+			case DONE_NOT_FOUND:
+				handleDNFRequest(sockfd, msg);
+				break;
+			case DONE_FOUND:
+				handleDFRequest(sockfd, msg);
+				break;
+			case QUIT:
+				handleQuitRequest(sockfd, msg);
+				break;
+			case STOP:
+				handleStopRequest(sockfd, msg);
 				break;
 			default:
 				break;
@@ -300,7 +364,7 @@ char *getMsgFromJob(Job job) {
 
 void*ThreadSend(void *threadArgs) {
 	pthread_detach(pthread_self());
-
+	
 	Message res;
 	char *other = malloc(MSG_OTHER_LENGTH);
 	int sockfd;

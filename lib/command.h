@@ -9,7 +9,8 @@ enum COMMAND {
     ACCEPT,
     JOIN,
     JOB,
-    ACK_JOB,
+    STOP,   // requester out of network
+    QUIT,   // worker out of network
     PING,
     DONE_NOT_FOUND,
     DONE_FOUND,
@@ -18,8 +19,8 @@ enum COMMAND {
     HASH
 };
 
-static const char commandStr[10][15] = {
-	"ACCEPT", "JOIN", "JOB", "ACK_JOB",
+static const char commandStr[11][15] = {
+	"ACCEPT", "JOIN", "JOB", "STOP", "QUIT",
 	"PING", "DONE_NOT_FOUND", "DONE_FOUND",
 	"NOT_DONE", "SHUTDOWN", "HASH"
 };

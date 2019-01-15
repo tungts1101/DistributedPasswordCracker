@@ -19,7 +19,7 @@
 #define MAX_LEN_LINK 80
 
 int sockfd = 0;
-unsigned int clientID;
+int clientID = 0;
 
 int menu() {
     int kt;
@@ -40,7 +40,7 @@ int menu() {
 }
 
 struct Result {
-    unsigned int requestID;
+    int requestID;
     char Hash[MAX_LEN_BUF];
     char result_msg[50];
     int count_nf;
@@ -114,8 +114,18 @@ void signio_handler(int signo) {
     }
 }
 
+void sendStopMsg() {
+    Message msg = response(STOP, clientID, 0, "");
+    send(sockfd, (struct Message *)&msg, sizeof msg, 0);
+}
+
+void sigintHandler(int sig_num) {
+    sendStopMsg();
+    exit(0);
+}
+
 struct Request {
-    unsigned int requestId;
+    int requestId;
     char password[PW_LENGTH];
 };
 
@@ -132,6 +142,7 @@ int main(int argc, char **argv)
         error(ERR_NON_BLK_ASYNC);
 
 	signal(SIGIO, signio_handler);
+    signal(SIGINT, sigintHandler);
 
 	if(fcntl(sockfd, __F_SETOWN, getpid()) < 0)
         error(ERR_OWN_SOCKET);
@@ -190,7 +201,7 @@ int main(int argc, char **argv)
                 menu_check = menu();
                 break;
         }
-    if (menu_check == 4) printf("Thank you!\n");
+    if (menu_check == 4) {sendStopMsg(); printf("Thank you!\n");}
 
     exit(0);
 }
