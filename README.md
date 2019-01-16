@@ -18,21 +18,27 @@
 
   
 Clone Project
+
 `$ git clone git@github.com:helloworld1101/DistributedPasswordCracker.git`
 
   
 
 Server Usage
+
 `$ ./bin/server`
+
 (Type -h for helper menu)
 
 
 
 Requester Usage
+
 `$ ./bin/requester <server-addr> <server-port>`
 
   
 
 Worker Usage
+
 `$ ./bin/worker <server-addr> <server-port>`
+
 Type JOIN to join the network
