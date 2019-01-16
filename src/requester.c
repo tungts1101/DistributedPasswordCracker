@@ -23,11 +23,14 @@ int clientID = 0;
 
 int menu() {
     int kt;
-    printf("\nDistributed Password Cracker\n");
-    printf("1.Choose from file\n");
-    printf("2.Enter from keyboard\n");
-    printf("3.See result\n");
-    printf("4.Exit\n");
+    printf("\n\n\t _______________________________________________\n");
+    printf("\t|         DISTRIBUTED PASSWORD CRACKER          |\n");
+    printf("\t|_______________________________________________|\n");
+    printf("\t|1.Choose from file                             |\n");
+    printf("\t|2.Enter from keyboard                          |\n");
+    printf("\t|3.See result                                   |\n");
+    printf("\t|4.Exit                                         |\n");
+    printf("\t|_______________________________________________|\n\n");
     do
         {
         printf("You choose? ");
@@ -61,6 +64,10 @@ void addToQueue(struct Result result) {
 	resultQueue[--i] = result;
 }
 
+int validateHash(char* string) {
+    return strlen(string) == 13;
+}
+
 void signio_handler(int signo) {
 	int n;
     float progress;
@@ -88,7 +95,7 @@ void signio_handler(int signo) {
                             if (progress < 100)
                                 snprintf(output, 50, "%f", progress);
                             else {
-                                strcpy(output, "No password found!");
+                                strcpy(output, "No password found");
                                 resultQueue[i].status = 1;
                             }
                             strcpy(resultQueue[i].result_msg, output);
@@ -107,7 +114,6 @@ void signio_handler(int signo) {
                     }
                 }      
                 break;  
-                //printf("Password = %s\n", res.other);
             case SHUTDOWN:
                 exit(0);
                 break;
@@ -134,12 +140,15 @@ struct Request {
 
 int main(int argc, char **argv)
 {
+    int port = SERV_PORT;
     // TODO: advanced check for arguments list
-    if (argc !=2) {
+    if (argc != 2 && argc != 3) {
         exit(1);
+    } else if (argc == 3) {
+        port = atoi(argv[2]);
     }
     
-    sockfd = createTCPClientSocket(argv[1], SERV_PORT);
+    sockfd = createTCPClientSocket(argv[1], port);
 
     if(fcntl(sockfd, F_SETFL, O_NONBLOCK | O_ASYNC) < 0)
         error(ERR_NON_BLK_ASYNC);
@@ -171,10 +180,15 @@ int main(int argc, char **argv)
                 } else {
                     fgets(hash_string, MAX_LEN_BUF, fin);
                     hash_string[strlen(hash_string)-1] = '\0';
-                    // Send hash to server
-                    req = response(HASH, clientID, 0, hash_string);
-                    send(sockfd, (struct Message*)&req, sizeof req, 0);
-                    //
+                    if (validateHash(hash_string)) {
+                        // Send hash to server
+                        printf("\nHash sent to server! Press 3 to see result!\n");
+                        req = response(HASH, clientID, 0, hash_string);
+                        send(sockfd, (struct Message*)&req, sizeof req, 0);
+                        //
+                    } else {
+                        printf("\nHash length invalid! Hash length must be 13!\n");
+                    }           
                 }
 
                 menu_check = menu();
@@ -183,22 +197,30 @@ int main(int argc, char **argv)
                 printf("Enter Hash String: ");
                 scanf("%s",hash_string);
 
-                // Send hash to server
-                req = response(HASH, clientID, 0, hash_string);
-                send(sockfd, (struct Message*)&req, sizeof req, 0);
-                //
+                if (validateHash(hash_string)) {
+                    // Send hash to server
+                    printf("\nHash sent to server! Press 3 to see result!\n");
+                    req = response(HASH, clientID, 0, hash_string);
+                    send(sockfd, (struct Message*)&req, sizeof req, 0);
+                    //
+                } else {
+                    printf("\nHash length invalid! Hash length must be 13!\n");
+                } 
 
                 menu_check = menu();
                 break;
             case 3:
                 for (int i=0; i < MAX_REQUEST; i++) {
                     if (resultQueue[i].requestID != 0) {
-                        printf("\nID: %d\n",resultQueue[i].requestID);
-                        printf("Hash: %s\n",resultQueue[i].Hash);
+                        printf("\n\n\t _______________________________________________\n");
+                        printf("\t|               CRACKING RESULT                 |\n");
+                        printf("\t|_______________________________________________|\n");
+                        printf("\t|Hash: %20s                     |\n",resultQueue[i].Hash);
                         if (resultQueue[i].status == 1)
-                            printf("Result: %s\n",resultQueue[i].result_msg);
+                            printf("\t|Result: %18s                     |\n",resultQueue[i].result_msg);
                         else 
-                            printf("Progress: %s%%\n",resultQueue[i].result_msg);
+                            printf("\t|Progress: %15s%%                     |\n",resultQueue[i].result_msg);
+                        printf("\t|_______________________________________________|\n\n");
                     }
                 }
                 menu_check = menu();
