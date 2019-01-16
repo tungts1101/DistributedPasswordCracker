@@ -32,10 +32,10 @@ int menu() {
         {
         printf("You choose? ");
         scanf("%d",&kt);
-        if (kt < 1 || kt > 4)
+        if (kt != 1 && kt != 2 && kt != 3 && kt != 4)
             printf("Invalid option! Try again!\n");
         }
-    while (kt < 1 || kt > 4);
+    while (kt != 1 && kt != 2 && kt != 3 && kt != 4);
     return kt;
 }
 
@@ -87,7 +87,10 @@ void signio_handler(int signo) {
                             progress = resultQueue[i].count_nf/25.0 * 100;
                             if (progress < 100)
                                 snprintf(output, 50, "%f", progress);
-                            else strcpy(output, "No password found!");
+                            else {
+                                strcpy(output, "No password found!");
+                                resultQueue[i].status = 1;
+                            }
                             strcpy(resultQueue[i].result_msg, output);
                         }
                         break;
