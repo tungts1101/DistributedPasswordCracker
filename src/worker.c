@@ -107,9 +107,12 @@ struct ThreadArgs {
 
 int main(int argc, char **argv)
 {
+    int port = SERV_PORT;
     // TODO: advanced check for arguments list
-    if (argc !=2) {
+    if (argc != 2 && argc != 3) {
         exit(1);
+    } else if (argc == 3) {
+        port = atoi(argv[2]);
     }
 
     pthread_t threadID;
@@ -118,7 +121,7 @@ int main(int argc, char **argv)
     struct ThreadArgs *threadArgs;
     initJobQueue();
 
-    sockfd = createTCPClientSocket(argv[1], SERV_PORT);
+    sockfd = createTCPClientSocket(argv[1], port);
 
     signal(SIGINT, sigintHandler);
 
