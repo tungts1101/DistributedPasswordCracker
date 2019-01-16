@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "helper.h"
 #include "config.h"
 #include "message.h"
@@ -66,10 +67,16 @@ char *getNext(const char *from) {
 
 char *solve(char *from, char *to, char *hash) {
 	char *iterator = (char *)malloc(PW_LENGTH);
+	char *pw = malloc(HASH_LENGTH);
 	strcpy(iterator, from);
 
 	while(strcmp(iterator, to) < 0) {
-		if(strcmp(crypt(iterator, SALT), hash) == 0) {
+		memset(pw, 0, HASH_LENGTH);
+		pw = crypt(iterator, SALT);
+		printf("\r ");
+		printf("%s\t%s", iterator, pw);
+		if(strcmp(pw, hash) == 0) {
+			printf("\nFOUND IT\n");
 			return iterator;
 		}
 		iterator = getNext(iterator);
