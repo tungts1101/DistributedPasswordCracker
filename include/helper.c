@@ -10,6 +10,7 @@
 #include "helper.h"
 #include "config.h"
 #include "message.h"
+#include "math.h"
 
 char *slice(char *string, int from, int to) {
 	if(from > to) return NULL;
@@ -69,13 +70,30 @@ char *solve(char *from, char *to, char *hash) {
 	char *iterator = (char *)malloc(PW_LENGTH);
 	char *pw = malloc(HASH_LENGTH);
 	strcpy(iterator, from);
-
+	int i = 0;
+	float progress;
 	while(strcmp(iterator, to) < 0) {
+		i++;
 		memset(pw, 0, HASH_LENGTH);
 		pw = crypt(iterator, SALT);
+		progress = (i*100) / (pow(26,PW_LENGTH-1));
 		printf("\r ");
-		printf("%s\t%s", iterator, pw);
+		printf("%s\t[", iterator);
+		for (int j = 0; j < progress/5; j++) {
+			printf("=");
+		}
+		printf(">");
+		for (int k = 0; k < 19 - progress/5; k++) {
+			printf(".");
+		}
+		printf("]");
 		if(strcmp(pw, hash) == 0) {
+			printf("\r ");
+			printf("%s\t[", iterator);
+			for (int j = 0; j < 20; j++) {
+				printf("=");
+			}
+			printf(">]");
 			printf("\nFOUND IT\n");
 			return iterator;
 		}
