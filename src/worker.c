@@ -65,36 +65,6 @@ void deleteSameJobFromQueue(int requestId) {
     }
 }
 
-void signio_handler(int signo) {
-	int n;
-	Message res;
-	Message req;
-	char *hash;
-	char *password;
-    struct Job job;
-
-	if((n = recv(sockfd, (struct Message *)&res, sizeof res, 0)) > 0) {
-		switch(res.command) {
-			case ACCEPT:
-				clientID = res.clientID;
-				printf("Now my ID = %u\n", clientID);
-				break;
-			case JOB: ;
-                printf("Receive Job\n");
-                job.requestID = res.requestID;
-                strcpy(job.hash,res.other);
-                addToQueue(job);
-                printf("===========\n");
-				break;
-            case DONE_FOUND: ;
-                deleteSameJobFromQueue(res.requestID);
-                break;
-			default:
-				break;
-		}
-	}
-}
-
 void sigintHandler(int sig_num) {
     Message msg = response(QUIT, clientID, 0, "");
     send(sockfd, (struct Message *)&msg, sizeof msg, 0);
@@ -108,7 +78,6 @@ struct ThreadArgs {
 int main(int argc, char **argv)
 {
     int port = SERV_PORT;
-    // TODO: advanced check for arguments list
     if (argc != 2 && argc != 3) {
         exit(1);
     } else if (argc == 3) {
@@ -130,15 +99,6 @@ int main(int argc, char **argv)
 		
     pthread_create(&threadID, NULL, ThreadRecv, (void *) threadArgs);
     pthread_create(&threadID, NULL, ThreadWork, (void *) threadArgs);
-
-
-    // if(fcntl(sockfd, F_SETFL, O_NONBLOCK | O_ASYNC))
-    //     error(ERR_NON_BLK_ASYNC);
-
-	// signal(SIGIO, signio_handler);
-
-	// if(fcntl(sockfd, __F_SETOWN, getpid()) < 0)
-    //     error(ERR_OWN_SOCKET);
 
     Message req;
 
@@ -191,11 +151,9 @@ void *ThreadRecv(void *threadArgs) {
 				printf("Now my ID = %u\n", clientID);
 				break;
 			case JOB: ;
-                printf("Receive Job\n");
                 job.requestID = res.requestID;
                 strcpy(job.hash,res.other);
                 addToQueue(job);
-                printf("===========\n");
 				break;
             case DONE_FOUND: ;
                 deleteSameJobFromQueue(res.requestID);
@@ -221,12 +179,10 @@ void*ThreadWork(void* threadArgs) {
     Message req;
 
     while (1) {
-        // printf("...........................\n");
         struct Job job = getJobFromQueue();
         if (job.requestID != 0) {
-            // printf("Other: %s\n", job.hash);
+            printf("\n=====Solving=====\n");
             char *password = solvePassword(job.hash);
-            // printf("Password solve result: %s\n", password);
 
             if(password == NULL)
                 req = response(DONE_NOT_FOUND, clientID, job.requestID, job.hash);

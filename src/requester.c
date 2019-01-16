@@ -226,7 +226,7 @@ int main(int argc, char **argv)
                 menu_check = menu();
                 break;
         }
-    if (menu_check == 4) {sendStopMsg(); printf("Thank you!\n");}
+    if (menu_check == 4) {sendStopMsg(); printf("\nThank you! See you again!\n");}
 
     exit(0);
 }
