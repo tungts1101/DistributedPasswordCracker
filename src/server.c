@@ -12,11 +12,11 @@
 #include <signal.h>	// signal()
 #include <time.h>	// time_t, struct tm
 #include <getopt.h>	// getopt()
-#include "../lib/message.h"
-#include "../lib/connection.h"
-#include "../lib/config.h"
-#include "../lib/error.h"
-#include "../lib/structure.h"
+#include "message.h"
+#include "connection.h"
+#include "config.h"
+#include "error.h"
+#include "structure.h"
 
 void *ThreadRecv(void *threadArgs);
 void *ThreadSend(void *threadArgs);

@@ -11,10 +11,10 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <pthread.h>    // POSIX thread
-#include "../lib/message.h"
-#include "../lib/connection.h"
-#include "../lib/error.h"
-#include "../lib/helper.h"
+#include "message.h"
+#include "connection.h"
+#include "error.h"
+#include "helper.h"
 
 #define MAX_LEN_BUF 30
 

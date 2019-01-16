@@ -4,7 +4,7 @@
 
 #include <stdio.h>  // perror()
 #include <stdlib.h> // exit()
-#include "../lib/error.h"
+#include "error.h"
 
 #define NUM_OF_ERRORS 11
 

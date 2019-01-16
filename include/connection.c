@@ -7,9 +7,9 @@
 #include <string.h>         // memset()
 #include <fcntl.h>
 #include <errno.h>
-#include "../lib/error.h"   // error()
-#include "../lib/connection.h"
-#include "../lib/config.h"
+#include "error.h"   // error()
+#include "connection.h"
+#include "config.h"
 
 int createTCPServerSocket(unsigned short port) {
     int sockfd;

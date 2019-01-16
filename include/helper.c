@@ -6,9 +6,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include "../lib/helper.h"
-#include "../lib/config.h"
-#include "../lib/message.h"
+#include "helper.h"
+#include "config.h"
+#include "message.h"
 
 char *slice(char *string, int from, int to) {
 	if(from > to) return NULL;

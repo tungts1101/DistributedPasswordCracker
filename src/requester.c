@@ -11,9 +11,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <signal.h>
-#include "../lib/message.h"
-#include "../lib/connection.h"
-#include "../lib/error.h"
+#include "message.h"
+#include "connection.h"
+#include "error.h"
 
 #define MAX_LEN_BUF 30
 #define MAX_LEN_LINK 80

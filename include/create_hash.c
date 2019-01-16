@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include "../lib/config.h"
+#include "config.h"
 
 void main(int argc, char **argv) {
 	if(argc < 2)

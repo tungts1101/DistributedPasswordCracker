@@ -7,9 +7,9 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
-#include "../lib/structure.h"
-#include "../lib/object.h"
-#include "../lib/helper.h"
+#include "structure.h"
+#include "object.h"
+#include "helper.h"
 
 void testSolvePassword();
 void testObject();

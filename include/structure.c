@@ -6,8 +6,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "../lib/structure.h"
-#include "../lib/object.h"
+#include "structure.h"
+#include "object.h"
 
 // execute to reset all structure
 void init() {

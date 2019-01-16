@@ -4,7 +4,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "../lib/object.h"
+#include "object.h"
 
 // CONNECTION =================================================================
 void setConnection(Connection *conn, int clientID, int sockfd) {

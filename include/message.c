@@ -4,10 +4,10 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "../lib/command.h"
-#include "../lib/config.h"
-#include "../lib/helper.h"
-#include "../lib/message.h"
+#include "command.h"
+#include "config.h"
+#include "helper.h"
+#include "message.h"
 
 Message response(enum COMMAND command, int clientID, unsigned requestID, char *other){
 	Message res;
