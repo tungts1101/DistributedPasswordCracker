@@ -31,37 +31,38 @@ struct Job {
 struct Job *jobQueue;
 
 void initJobQueue() {
-	jobQueue = (struct Job *) malloc(MAX_JOB_PER_WORKER * sizeof(struct Job));
+	jobQueue = (struct Job *) malloc(MAX_JOB_PER_WORKER * sizeof(struct Job)); 
 }
 
 void addToQueue(struct Job job) {
-    int i = 0;
-	
-	while(jobQueue[i++].requestID != 0);
-
-	jobQueue[--i] = job;
+    for (int i = 0; i < MAX_JOB_PER_WORKER; i++) {
+        if (jobQueue[i].requestID == 0) {
+            jobQueue[i] = job;
+            break;
+        }
+    }  
 }
 
 struct Job getJobFromQueue() {
-    int i = 0;
-    struct Job job = jobQueue[0];
+    int i = 0; 
     //printf("%d\n",job.requestID);
-    while (jobQueue[i+1].requestID != 0) {
-        jobQueue[i] = jobQueue[i+1];
-        i++;
-    }
-    jobQueue[i].requestID = 0;
+    struct Job job;
+    for (i = 0; i < MAX_JOB_PER_WORKER; i++) {
+        if (jobQueue[i].requestID != 0) {
+            job = jobQueue[i];
+            for (int j = i; j < MAX_JOB_PER_WORKER - i; j++) jobQueue[j] = jobQueue[j+1];
+            break;
+        }
+    }  
+    if (i == MAX_JOB_PER_WORKER) job = jobQueue[0];
     return job;
 }
 
 void deleteSameJobFromQueue(int requestId) {
-    int i = 0;
-	
-	while(jobQueue[i].requestID != 0) {
+	for (int i = 0; i < MAX_JOB_PER_WORKER; i++) {
         if (jobQueue[i].requestID == requestId) {
             jobQueue[i].requestID = 0;
         }
-        i++;
     }
 }
 
