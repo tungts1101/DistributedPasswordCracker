@@ -78,7 +78,7 @@ char *solve(char *from, char *to, char *hash) {
 		pw = crypt(iterator, SALT);
 		progress = (i*100) / (pow(26,PW_LENGTH-1));
 		printf("\r ");
-		printf("%s\t[", iterator);
+		printf("%s\t%3.2f%%\t[", iterator, progress);
 		for (int j = 0; j < progress/5; j++) {
 			printf("=");
 		}
@@ -89,7 +89,7 @@ char *solve(char *from, char *to, char *hash) {
 		printf("]");
 		if(strcmp(pw, hash) == 0) {
 			printf("\r ");
-			printf("%s\t[", iterator);
+			printf("%s\t100.00%%\t[", iterator);
 			for (int j = 0; j < 20; j++) {
 				printf("=");
 			}
