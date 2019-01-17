@@ -210,19 +210,19 @@ int main(int argc, char **argv)
                 menu_check = menu();
                 break;
             case 3:
-                for (int i=0; i < MAX_REQUEST; i++) {
+                printf("\n\n\t _______________________________________________\n");
+                printf("\t|               CRACKING RESULT                 |\n");
+                printf("\t|_______________________________________________|\n");
+                for (int i=0; i < MAX_REQUEST; i++) {                  
                     if (resultQueue[i].requestID != 0) {
-                        printf("\n\n\t _______________________________________________\n");
-                        printf("\t|               CRACKING RESULT                 |\n");
-                        printf("\t|_______________________________________________|\n");
                         printf("\t|Hash: %20s                     |\n",resultQueue[i].Hash);
                         if (resultQueue[i].status == 1)
                             printf("\t|Result: %18s                     |\n",resultQueue[i].result_msg);
                         else 
                             printf("\t|Progress: %15s%%                     |\n",resultQueue[i].result_msg);
-                        printf("\t|_______________________________________________|\n\n");
-                    }
+                    }                  
                 }
+                printf("\t|_______________________________________________|\n\n");
                 menu_check = menu();
                 break;
         }
